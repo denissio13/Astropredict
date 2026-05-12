@@ -1,453 +1,560 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Астрологический анализ торговых паттернов
-Сопоставляет положения планет и лунный календарь с графиком цены
-для прогнозирования направления дневной свечи
+Astrological Trading Analyzer with Auto Data Fetching
+Analyzes historical price data based on astrological patterns (Moon phases, planetary positions)
+to forecast the direction of the current daily candle for Crypto pairs.
+Fetches data automatically from Binance or Bybit.
+
+Usage:
+    python astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT --source binance
+    python astro_trading_analyzer.py --pairs SOLUSDT --source bybit --similarity 0.85
 """
+
+import argparse
+import json
+import math
+import os
+import sys
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple, Any
+
+# Try to import optional heavy libraries
+try:
+    import swisseph as swe
+    HAS_SWISSEPH = True
+except ImportError:
+    HAS_SWISSEPH = False
+    print("⚠️  Warning: swisseph not installed. Using simplified astronomical calculations.")
+    print("   For better accuracy, install it: pip install pyswisseph")
 
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Optional
-import json
-import math
+import requests
+import time
 
-# Для расчёта положений планет (требуется установка: pip install swisseph)
-try:
-    import swisseph as swe
-    SWISSEPHE_AVAILABLE = True
-except ImportError:
-    SWISSEPHE_AVAILABLE = False
-    print("Warning: swisseph not installed. Using simplified planetary calculations.")
+# --- Configuration ---
+DEFAULT_DATA_DIR = "data"
+CACHE_EXPIRY_HOURS = 24
 
+# ============================================================================
+# DATA FETCHING MODULE
+# ============================================================================
 
-class AstrologicalAnalyzer:
-    """Класс для астрологического анализа рыночных данных"""
+def fetch_binance_data(symbol: str, timeframe: str = '1d', limit: int = 1000) -> pd.DataFrame:
+    """
+    Fetches historical K-line data from Binance Public API.
+    Symbol format: 'BTCUSDT', 'ETHUSDT' (case insensitive).
+    """
+    symbol = symbol.upper().replace('/', '').replace('-', '')
     
-    def __init__(self, ephemeris_path: str = None):
-        """
-        Инициализация анализатора
-        
-        Args:
-            ephemeris_path: Путь к файлам эфемерид (для swisseph)
-        """
-        if SWISSEPHE_AVAILABLE and ephemeris_path:
-            swe.set_ephe_path(ephemeris_path)
-        
-        # Планеты для анализа
-        self.planets = {
-            'Sun': 0,      # Солнце
-            'Moon': 1,     # Луна
-            'Mercury': 2,  # Меркурий
-            'Venus': 3,    # Венера
-            'Mars': 4,     # Марс
-            'Jupiter': 5,  # Юпитер
-            'Saturn': 6,   # Сатурн
-        }
-        
-        # Лунные фазы
-        self.moon_phases = {
-            'New Moon': 0,           # Новолуние
-            'Waxing Crescent': 1,    # Растущая луна
-            'First Quarter': 2,      # Первая четверть
-            'Waxing Gibbous': 3,     # Прибывающая луна
-            'Full Moon': 4,          # Полнолуние
-            'Waning Gibbous': 5,     # Убывающая луна
-            'Last Quarter': 6,       # Последняя четверть
-            'Waning Crescent': 7,    # Убывающий серп
-        }
+    # Auto-append USDT if no quote currency detected
+    if not any(quote in symbol for quote in ['USDT', 'BUSD', 'USDC', 'FDUSD', 'BTC', 'ETH', 'BNB', 'SOL']):
+        symbol += 'USDT'
     
-    def get_planet_position(self, date: datetime, planet_name: str) -> float:
-        """
-        Получить положение планеты на заданную дату
+    url = "https://api.binance.com/api/v3/klines"
+    
+    print(f"📡 Fetching data for {symbol} from Binance...")
+    
+    params = {
+        'symbol': symbol,
+        'interval': timeframe,
+        'limit': limit
+    }
+    
+    try:
+        resp = requests.get(url, params=params, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
         
-        Args:
-            date: Дата для расчёта
-            planet_name: Название планеты
+        if not data or not isinstance(data, list):
+            raise ValueError(f"No data returned for {symbol} from Binance.")
             
-        Returns:
-            Долгота планеты в градусах (0-360)
-        """
-        if SWISSEPHE_AVAILABLE:
-            julian_day = swe.julday(date.year, date.month, date.day, 0.0)
-            planet_id = self.planets.get(planet_name, 0)
-            result = swe.calc_ut(julian_day, planet_id)
-            return result[0][0]  # Долгота
+        df = pd.DataFrame(data, columns=[
+            'timestamp', 'open', 'high', 'low', 'close', 'volume',
+            'close_time', 'quote_vol', 'trades', 'taker_buy_base', 'taker_buy_quote', 'ignore'
+        ])
+        
+        df['date'] = pd.to_datetime(df['timestamp'], unit='ms')
+        numeric_cols = ['open', 'high', 'low', 'close', 'volume']
+        for col in numeric_cols:
+            df[col] = df[col].astype(float)
+        
+        df.set_index('date', inplace=True)
+        df = df.sort_index()
+        
+        print(f"✅ Loaded {len(df)} candles for {symbol} (Range: {df.index[0].date()} to {df.index[-1].date()})")
+        return df[['open', 'high', 'low', 'close', 'volume']]
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Network error fetching {symbol} from Binance: {e}")
+        return pd.DataFrame()
+    except Exception as e:
+        print(f"❌ Error processing {symbol} from Binance: {e}")
+        return pd.DataFrame()
+
+
+def fetch_bybit_data(symbol: str, timeframe: str = 'D', limit: int = 1000) -> pd.DataFrame:
+    """
+    Fetches historical K-line data from Bybit Public API (V5).
+    Symbol format: 'BTCUSDT'
+    """
+    symbol = symbol.upper().replace('/', '').replace('-', '')
+    
+    if not any(quote in symbol for quote in ['USDT', 'USDC', 'BTC', 'ETH', 'SOL']):
+        symbol += 'USDT'
+
+    url = "https://api.bybit.com/v5/market/kline"
+    
+    print(f"📡 Fetching data for {symbol} from Bybit...")
+    
+    params = {
+        'category': 'linear',
+        'symbol': symbol,
+        'interval': timeframe,
+        'limit': limit
+    }
+    
+    try:
+        resp = requests.get(url, params=params, timeout=15)
+        resp.raise_for_status()
+        result = resp.json()
+        
+        if result.get('retCode') != 0:
+            raise ValueError(f"Bybit API error: {result.get('retMsg', 'Unknown error')}")
+            
+        data = result['result']['list']
+        
+        if not data:
+            raise ValueError(f"No data returned for {symbol} from Bybit.")
+            
+        df = pd.DataFrame(data, columns=[
+            'timestamp', 'open', 'high', 'low', 'close', 'volume', 'turnover'
+        ])
+        
+        df['date'] = pd.to_datetime(df['timestamp'], unit='ms')
+        numeric_cols = ['open', 'high', 'low', 'close', 'volume']
+        for col in numeric_cols:
+            df[col] = df[col].astype(float)
+        
+        df.set_index('date', inplace=True)
+        df = df.sort_index()
+        
+        print(f"✅ Loaded {len(df)} candles for {symbol} (Range: {df.index[0].date()} to {df.index[-1].date()})")
+        return df[['open', 'high', 'low', 'close', 'volume']]
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Network error fetching {symbol} from Bybit: {e}")
+        return pd.DataFrame()
+    except Exception as e:
+        print(f"❌ Error processing {symbol} from Bybit: {e}")
+        return pd.DataFrame()
+
+
+def get_market_data(pairs: List[str], source: str = 'binance') -> Dict[str, pd.DataFrame]:
+    """
+    Orchestrates data fetching for a list of pairs.
+    Returns a dictionary mapping symbol -> DataFrame
+    """
+    data_store = {}
+    source = source.lower()
+    
+    if source not in ['binance', 'bybit']:
+        print(f"⚠️  Unknown source '{source}'. Defaulting to Binance.")
+        source = 'binance'
+    
+    for pair in pairs:
+        df = pd.DataFrame()
+        if source == 'binance':
+            df = fetch_binance_data(pair)
+        elif source == 'bybit':
+            df = fetch_bybit_data(pair)
+            
+        if not df.empty:
+            data_store[pair] = df
         else:
-            # Упрощённый расчёт (для демонстрации)
-            return self._simplified_planet_position(date, planet_name)
-    
-    def _simplified_planet_position(self, date: datetime, planet_name: str) -> float:
-        """Упрощённый расчёт положения планет (если swisseph недоступен)"""
-        # Базовые периоды обращения планет (в днях)
-        periods = {
-            'Sun': 365.25,
-            'Moon': 27.32,
-            'Mercury': 87.97,
-            'Venus': 224.70,
-            'Mars': 686.98,
-            'Jupiter': 4332.59,
-            'Saturn': 10759.22,
-        }
-        
-        # Базовые позиции на 01.01.2000
-        base_positions = {
-            'Sun': 280.5,
-            'Moon': 218.3,
-            'Mercury': 261.8,
-            'Venus': 185.4,
-            'Mars': 113.2,
-            'Jupiter': 238.7,
-            'Saturn': 50.1,
-        }
-        
-        base_date = datetime(2000, 1, 1)
-        days_since_base = (date - base_date).days
-        
-        period = periods.get(planet_name, 365.25)
-        base_pos = base_positions.get(planet_name, 0)
-        
-        position = (base_pos + (days_since_base / period) * 360) % 360
-        return position
-    
-    def get_moon_phase(self, date: datetime) -> Tuple[str, float]:
-        """
-        Определить фазу луны и её освещённость
-        
-        Args:
-            date: Дата для расчёта
+            print(f"⚠️  Skipping {pair} due to data fetch failure.")
             
-        Returns:
-            Кортеж (название фазы, процент освещённости)
-        """
-        # Получаем долготы Солнца и Луны
-        sun_lon = self.get_planet_position(date, 'Sun')
-        moon_lon = self.get_planet_position(date, 'Moon')
-        
-        # Угол между Солнцем и Луной
-        angle = (moon_lon - sun_lon) % 360
-        
-        # Процент освещённости
-        illumination = (1 - math.cos(math.radians(angle))) / 2 * 100
-        
-        # Определение фазы
-        if angle < 22.5:
-            phase = 'New Moon'
-        elif angle < 67.5:
-            phase = 'Waxing Crescent'
-        elif angle < 112.5:
-            phase = 'First Quarter'
-        elif angle < 157.5:
-            phase = 'Waxing Gibbous'
-        elif angle < 202.5:
-            phase = 'Full Moon'
-        elif angle < 247.5:
-            phase = 'Waning Gibbous'
-        elif angle < 292.5:
-            phase = 'Last Quarter'
+        # Small delay to be polite to APIs if many pairs
+        if len(pairs) > 1:
+            time.sleep(0.2)
+            
+    return data_store
+
+# ============================================================================
+# ASTROLOGICAL CALCULATION ENGINE
+# ============================================================================
+
+class AstroEngine:
+    """Handles all astronomical/astrological calculations"""
+    
+    def __init__(self):
+        if HAS_SWISSEPH:
+            swe.set_ephe_path(None)  # Use default built-in ephemeris
+            
+    def get_julian_day(self, dt: datetime) -> float:
+        """Convert datetime to Julian Day"""
+        if HAS_SWISSEPH:
+            return swe.julday(dt.year, dt.month, dt.day, dt.hour + dt.minute/60.0)
         else:
-            phase = 'Waning Crescent'
-        
-        return phase, illumination
-    
-    def get_astrological_signature(self, date: datetime) -> Dict:
-        """
-        Создать астрологическую сигнатуру для даты
-        
-        Args:
-            date: Дата для анализа
+            # Simplified Julian Day calculation (sufficient for our approximations)
+            # Based on Meeus algorithm
+            year = dt.year
+            month = dt.month
+            day = dt.day + (dt.hour + dt.minute/60.0) / 24.0
             
-        Returns:
-            Словарь с астрологическими параметрами
-        """
-        signature = {}
-        
-        # Положение Луны
-        signature['moon_longitude'] = self.get_planet_position(date, 'Moon')
-        signature['moon_sign'] = int(signature['moon_longitude'] // 30)  # Знак зодиака (0-11)
-        
-        # Фаза луны
-        phase, illumination = self.get_moon_phase(date)
-        signature['moon_phase'] = phase
-        signature['moon_illumination'] = illumination
-        signature['moon_phase_id'] = self.moon_phases[phase]
-        
-        # Положения планет
-        for planet in self.planets.keys():
-            signature[f'{planet.lower()}_longitude'] = self.get_planet_position(date, planet)
-            signature[f'{planet.lower()}_sign'] = int(signature[f'{planet.lower()}_longitude'] // 30)
-        
-        # Аспекты между планетами (важные углы)
-        signature['sun_moon_aspect'] = self._calculate_aspect(
-            signature['sun_longitude'], 
-            signature['moon_longitude']
-        )
-        
-        signature['venus_mars_aspect'] = self._calculate_aspect(
-            signature['venus_longitude'], 
-            signature['mars_longitude']
-        )
-        
-        return signature
-    
-    def _calculate_aspect(self, lon1: float, lon2: float) -> str:
-        """
-        Рассчитать аспект между двумя планетами
-        
-        Args:
-            lon1: Долгота первой планеты
-            lon2: Долгота второй планеты
+            if month <= 2:
+                year -= 1
+                month += 12
+                
+            A = int(year / 100)
+            B = 2 - A + int(A / 4)
             
-        Returns:
-            Название аспекта
+            jd = int(365.25 * (year + 4716)) + int(30.6001 * (month + 1)) + day + B - 1524.5
+            return jd
+    
+    def get_planet_position(self, dt: datetime, planet_id: int) -> float:
         """
-        diff = abs(lon1 - lon2) % 360
-        if diff > 180:
-            diff = 360 - diff
+        Get ecliptic longitude of a planet in degrees [0-360]
+        Uses Swiss Ephemeris if available, otherwise simplified calculation
+        """
+        jd = self.get_julian_day(dt)
         
-        # Орбисы для аспектов (допустимое отклонение)
-        aspects = [
-            (0, 'Conjunction', 8),      # Соединение
-            (60, 'Sextile', 6),         # Секстиль
-            (90, 'Square', 8),          # Квадрат
-            (120, 'Trine', 8),          # Трин
-            (180, 'Opposition', 8),     # Оппозиция
+        if HAS_SWISSEPH:
+            # Flag for mean node vs true node etc can be added, using default for now
+            result, ret_flag = swe.calc_ut(jd, planet_id)
+            return result[0]  # Longitude
+        else:
+            # Simplified approximation (not accurate for trading, but functional for demo)
+            return self._simplified_planet_pos(dt, planet_id)
+    
+    def _simplified_planet_pos(self, dt: datetime, planet_id: int) -> float:
+        """Very rough approximation for when swisseph is missing"""
+        # Reference date: J2000.0
+        ref_date = datetime(2000, 1, 1, 12, 0)
+        days_diff = (dt - ref_date).total_seconds() / 86400.0
+        
+        # Approximate orbital periods (days) and reference longitudes
+        # These are very rough averages
+        planets_data = {
+            0: {'period': 365.25, 'offset': 280.46},   # Sun
+            1: {'period': 27.32, 'offset': 218.32},    # Moon
+            2: {'period': 87.97, 'offset': 252.25},    # Mercury
+            3: {'period': 224.70, 'offset': 181.98},   # Venus
+            4: {'period': 686.98, 'offset': 355.43},   # Mars
+            5: {'period': 4332.59, 'offset': 34.35},   # Jupiter
+            6: {'period': 10759.22, 'offset': 50.07},  # Saturn
+        }
+        
+        if planet_id not in planets_data:
+            return 0.0
+            
+        p = planets_data[planet_id]
+        angle = (p['offset'] + (360.0 * days_diff / p['period'])) % 360.0
+        return angle
+
+    def get_moon_phase(self, dt: datetime) -> Tuple[float, str]:
+        """
+        Calculate moon phase (0.0-1.0) and name
+        0.0 = New Moon, 0.5 = Full Moon
+        """
+        if HAS_SWISSEPH:
+            jd = self.get_julian_day(dt)
+            sun_lon = swe.calc_ut(jd, 0)[0][0]
+            moon_lon = swe.calc_ut(jd, 1)[0][0]
+            elongation = (moon_lon - sun_lon) % 360.0
+            phase = elongation / 360.0
+        else:
+            # Simplified but more accurate lunar phase calculation
+            phase = self._simplified_moon_phase(dt)
+            
+        # Determine phase name
+        if phase < 0.03 or phase > 0.97:
+            name = "New Moon"
+        elif phase < 0.22:
+            name = "Waxing Crescent"
+        elif phase < 0.28:
+            name = "First Quarter"
+        elif phase < 0.47:
+            name = "Waxing Gibbous"
+        elif phase < 0.53:
+            name = "Full Moon"
+        elif phase < 0.72:
+            name = "Waning Gibbous"
+        elif phase < 0.78:
+            name = "Last Quarter"
+        elif phase < 0.97:
+            name = "Waning Crescent"
+        else:
+            name = "New Moon"
+            
+        return phase, name
+
+    def _simplified_moon_phase(self, dt: datetime) -> float:
+        """Rough moon phase calculation using known synodic cycles"""
+        # Reference: Known new moon on Jan 6, 2000 at 18:14 UTC
+        ref_date = datetime(2000, 1, 6, 18, 14)
+        diff_days = (dt - ref_date).total_seconds() / 86400.0
+        synodic_month = 29.53058867  # Average synodic month length
+        phase = (diff_days % synodic_month) / synodic_month
+        return phase
+
+    def get_aspects(self, dt: datetime) -> List[Dict]:
+        """
+        Calculate major aspects between planets for a given date
+        Returns list of aspects: {planet1, planet2, angle, orb, type}
+        """
+        planet_names = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']
+        planet_ids = [0, 1, 2, 3, 4, 5, 6]
+        
+        positions = {}
+        for name, pid in zip(planet_names, planet_ids):
+            positions[name] = self.get_planet_position(dt, pid)
+            
+        aspects = []
+        major_aspects = [
+            {'name': 'Conjunction', 'angle': 0, 'orb': 8},
+            {'name': 'Opposition', 'angle': 180, 'orb': 8},
+            {'name': 'Trine', 'angle': 120, 'orb': 8},
+            {'name': 'Square', 'angle': 90, 'orb': 7},
+            {'name': 'Sextile', 'angle': 60, 'orb': 6},
         ]
         
-        for angle, name, orb in aspects:
-            if abs(diff - angle) <= orb:
-                return name
-        
-        return 'None'
-    
-    def calculate_pattern_similarity(self, sig1: Dict, sig2: Dict) -> float:
+        for i, p1 in enumerate(planet_names):
+            for j, p2 in enumerate(planet_names):
+                if j <= i:
+                    continue
+                    
+                diff = abs(positions[p1] - positions[p2])
+                if diff > 180:
+                    diff = 360 - diff
+                    
+                for asp in major_aspects:
+                    orb = abs(diff - asp['angle'])
+                    if orb <= asp['orb']:
+                        aspects.append({
+                            'planet1': p1,
+                            'planet2': p2,
+                            'type': asp['name'],
+                            'angle': asp['angle'],
+                            'orb': round(orb, 2),
+                            'exactness': 1.0 - (orb / asp['orb'])
+                        })
+                        
+        return aspects
+
+    def generate_astro_signature(self, dt: datetime) -> Dict:
         """
-        Рассчитать схожесть двух астрологических сигнатур
+        Generate a complete astrological signature for a date
+        Used for pattern matching
+        """
+        phase_val, phase_name = self.get_moon_phase(dt)
+        aspects = self.get_aspects(dt)
         
-        Args:
-            sig1: Первая сигнатура
-            sig2: Вторая сигнатура
+        # Get positions
+        positions = {}
+        planet_names = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']
+        for i, name in enumerate(planet_names):
+            positions[name] = round(self.get_planet_position(dt, i), 2)
             
-        Returns:
-            Коэффициент схожести (0-1, где 1 - полное совпадение)
-        """
-        similarity_score = 0
-        max_score = 0
-        
-        # Схожесть фазы луны (вес: 3)
-        if sig1['moon_phase_id'] == sig2['moon_phase_id']:
-            similarity_score += 3
-        max_score += 3
-        
-        # Схожесть знака луны (вес: 2)
-        if sig1['moon_sign'] == sig2['moon_sign']:
-            similarity_score += 2
-        max_score += 2
-        
-        # Схожесть освещённости луны (вес: 2)
-        illum_diff = abs(sig1['moon_illumination'] - sig2['moon_illumination'])
-        similarity_score += max(0, 2 - illum_diff / 25)
-        max_score += 2
-        
-        # Схожесть аспекта Солнце-Луна (вес: 2)
-        if sig1['sun_moon_aspect'] == sig2['sun_moon_aspect']:
-            similarity_score += 2
-        max_score += 2
-        
-        # Схожесть знака Венеры (вес: 1)
-        if sig1['venus_sign'] == sig2['venus_sign']:
-            similarity_score += 1
-        max_score += 1
-        
-        # Схожесть знака Марса (вес: 1)
-        if sig1['mars_sign'] == sig2['mars_sign']:
-            similarity_score += 1
-        max_score += 1
-        
-        return similarity_score / max_score
-    
-    def analyze_historical_patterns(
-        self, 
-        price_data: pd.DataFrame, 
-        current_date: datetime,
-        min_similarity: float = 0.7,
-        max_matches: int = 20
-    ) -> Dict:
-        """
-        Найти схожие астрологические паттерны в истории и проанализировать цену
-        
-        Args:
-            price_data: DataFrame с историческими данными (index - даты, колонки: open, high, low, close)
-            current_date: Текущая дата для анализа
-            min_similarity: Минимальный порог схожести
-            max_matches: Максимальное количество найденных паттернов
+        # Discretize positions into sectors (30° = 1 zodiac sign) for pattern matching
+        sectors = {}
+        for name, pos in positions.items():
+            sectors[f"{name}_sector"] = int(pos // 30)
             
-        Returns:
-            Словарь с результатами анализа и прогнозом
-        """
-        # Получаем сигнатуру для текущей даты
-        current_sig = self.get_astrological_signature(current_date)
+        return {
+            'date': dt,
+            'moon_phase_val': phase_val,
+            'moon_phase_name': phase_name,
+            'moon_sector': int(positions['Moon'] // 30),
+            'sun_sector': int(positions['Sun'] // 30),
+            'sectors': sectors,
+            'positions': positions,
+            'aspects': aspects,
+            'aspect_count': len(aspects),
+            'dominant_aspect': aspects[0]['type'] if aspects else None
+        }
+
+# ============================================================================
+# PATTERN ANALYSIS & FORECASTING
+# ============================================================================
+
+class PatternAnalyzer:
+    """Analyzes patterns and generates forecasts"""
+    
+    def __init__(self, astro_engine: AstroEngine):
+        self.astro = astro_engine
         
+    def calculate_similarity(self, sig1: Dict, sig2: Dict) -> float:
+        """
+        Calculate similarity score between two astrological signatures
+        Score ranges from 0.0 (completely different) to 1.0 (identical)
+        """
+        score = 0.0
+        max_score = 0.0
+        
+        # Moon phase similarity (weight: 30%)
+        phase_diff = abs(sig1['moon_phase_val'] - sig2['moon_phase_val'])
+        if phase_diff > 0.5:
+            phase_diff = 1.0 - phase_diff
+        phase_score = 1.0 - phase_diff
+        score += phase_score * 0.30
+        max_score += 0.30
+        
+        # Moon sector similarity (weight: 20%)
+        if sig1['moon_sector'] == sig2['moon_sector']:
+            score += 0.20
+        else:
+            # Adjacent sectors get partial credit
+            diff = abs(sig1['moon_sector'] - sig2['moon_sector'])
+            if diff == 1 or diff == 11:
+                score += 0.10
+        max_score += 0.20
+        
+        # Sun sector similarity (weight: 15%)
+        if sig1['sun_sector'] == sig2['sun_sector']:
+            score += 0.15
+        max_score += 0.15
+        
+        # Aspect pattern similarity (weight: 25%)
+        # Compare count and types
+        count_diff = abs(sig1['aspect_count'] - sig2['aspect_count'])
+        count_score = max(0, 1.0 - (count_diff * 0.2))
+        score += count_score * 0.15
+        max_score += 0.15
+        
+        # Check for same dominant aspect
+        if sig1['dominant_aspect'] and sig2['dominant_aspect']:
+            if sig1['dominant_aspect'] == sig2['dominant_aspect']:
+                score += 0.10
+        max_score += 0.10
+        
+        # Normalize to 0-1
+        if max_score > 0:
+            return score / max_score
+        return 0.0
+    
+    def find_similar_patterns(self, df: pd.DataFrame, target_date: datetime, 
+                              min_similarity: float = 0.7, max_matches: int = 50) -> List[Dict]:
+        """
+        Find historical dates with similar astrological signatures
+        """
+        target_sig = self.astro.generate_astro_signature(target_date)
         matches = []
         
-        # Ищем схожие паттерны в истории
-        for idx, row in price_data.iterrows():
-            if idx >= current_date:
-                continue
-                
-            hist_sig = self.get_astrological_signature(idx)
-            similarity = self.calculate_pattern_similarity(current_sig, hist_sig)
+        # Iterate through historical data (exclude last few days to avoid lookahead bias)
+        cutoff_date = target_date - timedelta(days=2)
+        
+        for idx, row in df[df.index < cutoff_date].iterrows():
+            hist_date = idx.to_pydatetime()
+            hist_sig = self.astro.generate_astro_signature(hist_date)
+            
+            similarity = self.calculate_similarity(target_sig, hist_sig)
             
             if similarity >= min_similarity:
-                # Определяем направление свечи следующего дня
-                next_day_idx = idx + timedelta(days=1)
-                if next_day_idx in price_data.index:
-                    next_close = price_data.loc[next_day_idx, 'close']
-                    current_close = row['close']
-                    direction = 1 if next_close > current_close else (-1 if next_close < current_close else 0)
+                # Calculate price movement for the "current" candle (the day itself)
+                open_price = row['open']
+                close_price = row['close']
+                high_price = row['high']
+                low_price = row['low']
+                
+                if close_price > open_price:
+                    direction = 'BULLISH'
+                    strength = (close_price - open_price) / open_price
+                elif close_price < open_price:
+                    direction = 'BEARISH'
+                    strength = (open_price - close_price) / open_price
+                else:
+                    direction = 'NEUTRAL'
+                    strength = 0.0
                     
-                    matches.append({
-                        'date': idx,
-                        'similarity': similarity,
-                        'direction': direction,
-                        'price_change': (next_close - current_close) / current_close * 100,
-                        'current_close': current_close,
-                        'next_close': next_close,
-                    })
+                matches.append({
+                    'date': hist_date,
+                    'similarity': similarity,
+                    'direction': direction,
+                    'strength': strength,
+                    'open': open_price,
+                    'close': close_price,
+                    'high': high_price,
+                    'low': low_price,
+                    'astro_sig': hist_sig
+                })
         
-        # Сортируем по схожести
+        # Sort by similarity descending
         matches.sort(key=lambda x: x['similarity'], reverse=True)
-        matches = matches[:max_matches]
-        
-        # Анализируем результаты
+        return matches[:max_matches]
+    
+    def generate_forecast(self, matches: List[Dict]) -> Dict:
+        """
+        Generate forecast based on matched patterns
+        """
         if not matches:
             return {
-                'status': 'no_matches',
-                'message': 'Не найдено схожих паттернов',
-                'prediction': None,
+                'direction': 'UNKNOWN',
+                'confidence': 0.0,
+                'bullish_count': 0,
+                'bearish_count': 0,
+                'neutral_count': 0,
+                'total_matches': 0,
+                'avg_strength': 0.0,
+                'message': 'No similar patterns found'
             }
         
-        # Расчёт статистики
-        total_matches = len(matches)
-        bullish_count = sum(1 for m in matches if m['direction'] == 1)
-        bearish_count = sum(1 for m in matches if m['direction'] == -1)
-        neutral_count = sum(1 for m in matches if m['direction'] == 0)
+        bullish = sum(1 for m in matches if m['direction'] == 'BULLISH')
+        bearish = sum(1 for m in matches if m['direction'] == 'BEARISH')
+        neutral = sum(1 for m in matches if m['direction'] == 'NEUTRAL')
+        total = len(matches)
         
-        avg_price_change = np.mean([m['price_change'] for m in matches])
-        weighted_direction = np.average(
-            [m['direction'] for m in matches],
-            weights=[m['similarity'] for m in matches]
-        )
+        # Weighted voting by similarity
+        bullish_weight = sum(m['similarity'] for m in matches if m['direction'] == 'BULLISH')
+        bearish_weight = sum(m['similarity'] for m in matches if m['direction'] == 'BEARISH')
         
-        # Прогноз
-        if weighted_direction > 0.3:
-            prediction = 'BULLISH'
-            confidence = min(weighted_direction, 1.0) * 100
-        elif weighted_direction < -0.3:
-            prediction = 'BEARISH'
-            confidence = abs(min(weighted_direction, -1.0)) * 100
+        total_weight = bullish_weight + bearish_weight
+        if total_weight > 0:
+            bullish_ratio = bullish_weight / total_weight
         else:
-            prediction = 'NEUTRAL'
-            confidence = (1 - abs(weighted_direction)) * 100
+            bullish_ratio = 0.5
+            
+        avg_strength = np.mean([m['strength'] for m in matches])
+        
+        # Determine direction
+        if bullish > bearish * 1.2:  # 20% threshold for clarity
+            direction = 'BULLISH'
+        elif bearish > bullish * 1.2:
+            direction = 'BEARISH'
+        else:
+            direction = 'NEUTRAL/UNCERTAIN'
+            
+        # Confidence based on consensus and sample size
+        base_confidence = abs(bullish - bearish) / total
+        sample_factor = min(1.0, total / 20.0)  # Max out at 20 samples
+        confidence = base_confidence * sample_factor
         
         return {
-            'status': 'success',
-            'current_date': current_date.strftime('%Y-%m-%d'),
-            'current_signature': current_sig,
-            'total_matches': total_matches,
-            'bullish_count': bullish_count,
-            'bearish_count': bearish_count,
-            'neutral_count': neutral_count,
-            'bullish_percentage': bullish_count / total_matches * 100,
-            'bearish_percentage': bearish_count / total_matches * 100,
-            'avg_price_change': avg_price_change,
-            'weighted_direction': weighted_direction,
-            'prediction': prediction,
-            'confidence': confidence,
-            'matches': matches,
+            'direction': direction,
+            'confidence': round(confidence, 3),
+            'bullish_count': bullish,
+            'bearish_count': bearish,
+            'neutral_count': neutral,
+            'total_matches': total,
+            'avg_strength': round(avg_strength, 4),
+            'bullish_ratio': round(bullish_ratio, 3),
+            'top_matches': matches[:5]  # Include top 5 for reference
         }
-    
-    def generate_report(self, analysis_result: Dict) -> str:
-        """
-        Сгенерировать текстовый отчёт по анализу
-        
-        Args:
-            analysis_result: Результаты анализа
-            
-        Returns:
-            Текстовый отчёт
-        """
-        if analysis_result['status'] != 'success':
-            return f"Статус: {analysis_result['message']}"
-        
-        report = []
-        report.append("=" * 60)
-        report.append("АСТРОЛОГИЧЕСКИЙ АНАЛИЗ ТОРГОВОГО ПАТТЕРНА")
-        report.append("=" * 60)
-        report.append(f"\nДата анализа: {analysis_result['current_date']}")
-        report.append(f"\nНайдено схожих паттернов: {analysis_result['total_matches']}")
-        report.append(f"\n--- Статистика паттернов ---")
-        report.append(f"Бычьих свечей: {analysis_result['bullish_count']} ({analysis_result['bullish_percentage']:.1f}%)")
-        report.append(f"Медвежьих свечей: {analysis_result['bearish_count']} ({analysis_result['bearish_percentage']:.1f}%)")
-        report.append(f"Нейтральных свечей: {analysis_result['neutral_count']}")
-        report.append(f"\nСреднее изменение цены: {analysis_result['avg_price_change']:.2f}%")
-        report.append(f"\n--- ПРОГНОЗ ---")
-        report.append(f"Направление: {analysis_result['prediction']}")
-        report.append(f"Уверенность: {analysis_result['confidence']:.1f}%")
-        
-        report.append(f"\n--- Текущая астрологическая сигнатура ---")
-        sig = analysis_result['current_signature']
-        report.append(f"Фаза Луны: {sig['moon_phase']} ({sig['moon_illumination']:.1f}%)")
-        report.append(f"Знак Луны: {sig['moon_sign']} (0-Овен, 1-Телец, ...)")
-        report.append(f"Аспект Солнце-Луна: {sig['sun_moon_aspect']}")
-        report.append(f"Аспект Венера-Марс: {sig['venus_mars_aspect']}")
-        
-        report.append(f"\n--- Топ-5 наиболее схожих паттернов ---")
-        for i, match in enumerate(analysis_result['matches'][:5], 1):
-            report.append(f"{i}. {match['date'].strftime('%Y-%m-%d')} "
-                         f"(схожесть: {match['similarity']:.2f}, "
-                         f"изменение: {match['price_change']:+.2f}%)")
-        
-        report.append("\n" + "=" * 60)
-        report.append("ПРЕДУПРЕЖДЕНИЕ: Данный анализ не является финансовой рекомендацией!")
-        report.append("=" * 60)
-        
-        return "\n".join(report)
 
-
-def load_price_data(filepath: str) -> pd.DataFrame:
-    """
-    Загрузить данные графика из CSV файла
-    
-    Ожидаемый формат CSV:
-    date,open,high,low,close,volume
-    2020-01-01,1.1234,1.1250,1.1200,1.1240,1000
-    
-    Args:
-        filepath: Путь к CSV файлу
-        
-    Returns:
-        DataFrame с данными графика
-    """
-    df = pd.read_csv(filepath, parse_dates=['date'])
-    df.set_index('date', inplace=True)
-    df.sort_index(inplace=True)
-    return df
-
+# ============================================================================
+# MAIN EXECUTION
+# ============================================================================
 
 def main():
-    """Основная функция для запуска анализа"""
-    import argparse
-    
-    # Настройка парсера аргументов
     parser = argparse.ArgumentParser(
-        description='Астрологический анализ торговых паттернов',
+        description='Astrological Crypto Trading Analyzer',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Примеры использования:
-  python3 astro_trading_analyzer.py --pairs EURUSD
-  python3 astro_trading_analyzer.py --pairs EURUSD,GBPUSD,BTCUSD
-  python3 astro_trading_analyzer.py --pairs EURUSD --data my_data.csv
+Examples:
+  python %(prog)s --pairs BTCUSDT
+  python %(prog)s --pairs ETHUSDT,SOLUSDT,BNBUSDT --source bybit
+  python %(prog)s --pairs BTCUSDT --similarity 0.8 --max-matches 30
         """
     )
     
@@ -455,131 +562,162 @@ def main():
         '--pairs', '-p',
         type=str,
         required=True,
-        help='Валютная пара или список пар через запятую (например: EURUSD или EURUSD,GBPUSD,BTCUSD)'
+        help='Crypto pair(s) to analyze, comma-separated (e.g., BTCUSDT,ETHUSDT)'
     )
     
     parser.add_argument(
-        '--data', '-d',
+        '--source', '-s',
         type=str,
-        default=None,
-        help='Путь к CSV файлу с данными графика (по умолчанию используются тестовые данные)'
+        default='binance',
+        choices=['binance', 'bybit'],
+        help='Data source (default: binance)'
     )
     
     parser.add_argument(
-        '--similarity', '-s',
+        '--similarity',
         type=float,
-        default=0.6,
-        help='Минимальный порог схожести паттернов (0.0-1.0, по умолчанию 0.6)'
+        default=0.65,
+        help='Minimum similarity threshold for pattern matching (0.0-1.0, default: 0.65)'
     )
     
     parser.add_argument(
         '--max-matches', '-m',
         type=int,
-        default=30,
-        help='Максимальное количество найденных паттернов (по умолчанию 30)'
+        default=50,
+        help='Maximum number of historical matches to consider (default: 50)'
+    )
+    
+    parser.add_argument(
+        '--output', '-o',
+        type=str,
+        default='astro_analysis_result.json',
+        help='Output JSON file path (default: astro_analysis_result.json)'
     )
     
     args = parser.parse_args()
     
-    # Парсим список пар
+    # Parse pairs
     pairs = [p.strip().upper() for p in args.pairs.split(',')]
+    pairs = [p for p in pairs if p]  # Remove empty strings
+    
+    if not pairs:
+        print("❌ Error: No valid pairs provided!")
+        sys.exit(1)
     
     print("=" * 60)
-    print("АСТРОЛОГИЧЕСКИЙ АНАЛИЗАТОР ТОРГОВЫХ ПАТТЕРНОВ")
+    print("🔮 ASTROLOGICAL CRYPTO TRADING ANALYZER")
     print("=" * 60)
-    print(f"\nАнализируемые пары: {', '.join(pairs)}")
-    print(f"Минимальная схожесть: {args.similarity}")
-    print(f"Максимум паттернов: {args.max_matches}")
+    print(f"📊 Pairs: {', '.join(pairs)}")
+    print(f"📡 Source: {args.source.upper()}")
+    print(f"🎯 Similarity Threshold: {args.similarity}")
+    print(f"📈 Max Matches: {args.max_matches}")
+    print("=" * 60)
     
-    # Создаём анализатор
-    analyzer = AstrologicalAnalyzer()
+    # Initialize components
+    astro_engine = AstroEngine()
+    analyzer = PatternAnalyzer(astro_engine)
     
-    # Обрабатываем каждую пару
-    all_results = {}
+    # Fetch data
+    print("\n⏳ Fetching market data...")
+    data_store = get_market_data(pairs, source=args.source)
     
-    for pair in pairs:
-        print(f"\n{'=' * 60}")
-        print(f"АНАЛИЗ ПАРЫ: {pair}")
-        print(f"{'=' * 60}")
+    if not data_store:
+        print("❌ No data could be fetched. Exiting.")
+        sys.exit(1)
+    
+    results = {}
+    
+    # Analyze each pair
+    for symbol, df in data_store.items():
+        print(f"\n{'='*60}")
+        print(f"🪐 ANALYZING {symbol}")
+        print(f"{'='*60}")
         
-        # Загружаем данные
-        if args.data:
-            print(f"\nЗагрузка данных из файла: {args.data}")
-            try:
-                price_data = load_price_data(args.data)
-            except FileNotFoundError:
-                print(f"Ошибка: Файл {args.data} не найден!")
-                print("Будут использованы тестовые данные.")
-                price_data = generate_test_data()
-        else:
-            print("\nГенерация тестовых данных графика...")
-            price_data = generate_test_data()
+        # Get current date (last date in dataset)
+        current_date = df.index[-1]
+        print(f"📅 Analysis Date: {current_date.date()}")
         
-        # Текущая дата для анализа
-        current_date = datetime.now()
+        # Generate current astro signature
+        current_sig = astro_engine.generate_astro_signature(current_date)
+        print(f"🌙 Moon Phase: {current_sig['moon_phase_name']} ({current_sig['moon_phase_val']:.2f})")
+        print(f"☀️  Sun Position: {current_sig['positions']['Sun']:.1f}°")
+        print(f"🌙 Moon Position: {current_sig['positions']['Moon']:.1f}°")
+        print(f"🔗 Active Aspects: {current_sig['aspect_count']}")
+        if current_sig['dominant_aspect']:
+            print(f"   Dominant: {current_sig['dominant_aspect']}")
         
-        print(f"\nАнализ паттернов для даты: {current_date.strftime('%Y-%m-%d')}")
-        
-        # Выполняем анализ
-        result = analyzer.analyze_historical_patterns(
-            price_data=price_data,
-            current_date=current_date,
+        # Find similar patterns
+        print(f"\n🔍 Searching for historical patterns (similarity ≥ {args.similarity})...")
+        matches = analyzer.find_similar_patterns(
+            df, 
+            current_date, 
             min_similarity=args.similarity,
             max_matches=args.max_matches
         )
         
-        # Добавляем информацию о паре
-        result['symbol'] = pair
+        print(f"✅ Found {len(matches)} similar historical patterns")
         
-        # Генерируем и выводим отчёт
-        report = analyzer.generate_report(result)
-        print("\n" + report)
+        # Generate forecast
+        forecast = analyzer.generate_forecast(matches)
         
-        # Сохраняем результат
-        all_results[pair] = result
-    
-    # Сохраняем все результаты в JSON
-    output_file = 'astro_analysis_result.json'
-    with open(output_file, 'w', encoding='utf-8') as f:
-        # Преобразуем даты в строки для JSON
-        results_serializable = {}
-        for pair, result in all_results.items():
-            result_copy = result.copy()
-            if 'matches' in result_copy:
-                for match in result_copy['matches']:
-                    match['date'] = match['date'].strftime('%Y-%m-%d')
-            results_serializable[pair] = result_copy
+        # Display results
+        print(f"\n{'─'*40}")
+        print("📊 FORECAST RESULTS")
+        print(f"{'─'*40}")
+        print(f"Direction:      {forecast['direction']}")
+        print(f"Confidence:     {forecast['confidence']*100:.1f}%")
+        print(f"Bullish Cases:  {forecast['bullish_count']}")
+        print(f"Bearish Cases:  {forecast['bearish_count']}")
+        print(f"Neutral Cases:  {forecast['neutral_count']}")
+        print(f"Avg Strength:   {forecast['avg_strength']*100:.2f}%")
         
-        json.dump(results_serializable, f, indent=2, default=str, ensure_ascii=False)
+        if forecast['total_matches'] > 0:
+            print(f"\n🏆 Top 3 Historical Matches:")
+            for i, match in enumerate(forecast.get('top_matches', [])[:3], 1):
+                print(f"   {i}. {match['date'].date()} (Similarity: {match['similarity']:.2f}, Result: {match['direction']})")
+        
+        # Store result
+        results[symbol] = {
+            'analysis_date': current_date.isoformat(),
+            'astro_signature': {
+                'moon_phase': current_sig['moon_phase_name'],
+                'moon_phase_value': current_sig['moon_phase_val'],
+                'sun_position': current_sig['positions']['Sun'],
+                'moon_position': current_sig['positions']['Moon'],
+                'aspect_count': current_sig['aspect_count'],
+                'dominant_aspect': current_sig['dominant_aspect']
+            },
+            'forecast': forecast,
+            'matches_found': len(matches)
+        }
     
-    print(f"\n{'=' * 60}")
-    print(f"Результаты сохранены в файл: {output_file}")
-    print(f"{'=' * 60}")
+    # Save results to JSON
+    output_data = {
+        'timestamp': datetime.now().isoformat(),
+        'parameters': {
+            'pairs': pairs,
+            'source': args.source,
+            'similarity_threshold': args.similarity,
+            'max_matches': args.max_matches
+        },
+        'results': results
+    }
     
-    return all_results
-
-
-def generate_test_data() -> pd.DataFrame:
-    """Генерация тестовых данных графика"""
-    dates = pd.date_range(start='2020-01-01', end=datetime.now().strftime('%Y-%m-%d'), freq='D')
+    with open(args.output, 'w', encoding='utf-8') as f:
+        json.dump(output_data, f, indent=2, default=str)
     
-    # Симулируем случайные данные графика
-    np.random.seed(42)
-    base_price = 1.1000
-    prices = []
-    for i in range(len(dates)):
-        change = np.random.randn() * 0.005
-        base_price *= (1 + change)
-        prices.append(base_price)
+    print(f"\n💾 Results saved to: {args.output}")
+    print("=" * 60)
+    print("✨ Analysis Complete!")
+    print("=" * 60)
     
-    price_data = pd.DataFrame({
-        'open': prices,
-        'high': [p * (1 + abs(np.random.randn() * 0.003)) for p in prices],
-        'low': [p * (1 - abs(np.random.randn() * 0.003)) for p in prices],
-        'close': prices,
-    }, index=dates)
-    
-    return price_data
+    # Summary table
+    print("\n📋 SUMMARY:")
+    print(f"{'Pair':<12} {'Direction':<18} {'Confidence':<12} {'Matches':<8}")
+    print("-" * 50)
+    for symbol, res in results.items():
+        fc = res['forecast']
+        print(f"{symbol:<12} {fc['direction']:<18} {fc['confidence']*100:>6.1f}%      {fc['total_matches']:<8}")
 
 
 if __name__ == '__main__':

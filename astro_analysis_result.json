@@ -1,238 +1,1156 @@
 {
-  "EURUSD": {
-    "status": "success",
-    "current_date": "2026-05-12",
-    "current_signature": {
-      "moon_longitude": 7.9925329428951954,
-      "moon_sign": 0,
-      "moon_phase": "Waning Crescent",
-      "moon_illumination": 12.911344786651425,
-      "moon_phase_id": 7,
-      "sun_longitude": 50.109856262834,
-      "sun_sign": 1,
-      "mercury_longitude": 62.50478572240536,
-      "mercury_sign": 2,
-      "venus_longitude": 130.7671562082778,
-      "venus_sign": 4,
-      "mars_longitude": 118.58705639174332,
-      "mars_sign": 3,
-      "jupiter_longitude": 318.7018464705868,
-      "jupiter_sign": 10,
-      "saturn_longitude": 12.249746914739205,
-      "saturn_sign": 0,
-      "sun_moon_aspect": "None",
-      "venus_mars_aspect": "None"
-    },
-    "total_matches": 10,
-    "bullish_count": 5,
-    "bearish_count": 5,
-    "neutral_count": 0,
-    "bullish_percentage": 50.0,
-    "bearish_percentage": 50.0,
-    "avg_price_change": 0.05472027007965245,
-    "weighted_direction": 0.01036250587674902,
-    "prediction": "NEUTRAL",
-    "confidence": 98.9637494123251,
-    "matches": [
-      {
-        "date": "2024-05-04",
-        "similarity": 0.9036006206231587,
-        "direction": 1,
-        "price_change": 0.0882207776386213,
-        "current_close": 1.5205730047918056,
-        "next_close": 1.5219144661211959
-      },
-      {
-        "date": "2024-06-02",
-        "similarity": 0.9007197658580556,
-        "direction": 1,
-        "price_change": 1.5965537839224342,
-        "current_close": 1.4743510495211642,
-        "next_close": 1.4978898569905945
-      },
-      {
-        "date": "2021-06-05",
-        "similarity": 0.8880017432219575,
-        "direction": -1,
-        "price_change": -0.33131187947292295,
-        "current_close": 1.0961698742767465,
-        "next_close": 1.0925381332640642
-      },
-      {
-        "date": "2024-05-05",
-        "similarity": 0.8823590530454708,
-        "direction": -1,
-        "price_change": -0.18351391954165916,
-        "current_close": 1.5219144661211959,
-        "next_close": 1.5191215412323453
-      },
-      {
-        "date": "2023-04-18",
-        "similarity": 0.8697497020054189,
-        "direction": 1,
-        "price_change": 0.024430035162853452,
-        "current_close": 1.367177182541955,
-        "next_close": 1.3675111844083885
-      },
-      {
-        "date": "2024-05-06",
-        "similarity": 0.8684065652133128,
-        "direction": -1,
-        "price_change": -0.41379511032436245,
-        "current_close": 1.5191215412323453,
-        "next_close": 1.5128354905748418
-      },
-      {
-        "date": "2026-04-15",
-        "similarity": 0.8656581631046404,
-        "direction": 1,
-        "price_change": 0.7007992964732177,
-        "current_close": 1.5665849022658669,
-        "next_close": 1.5775635182396017
-      },
-      {
-        "date": "2022-05-26",
-        "similarity": 0.815710233044782,
-        "direction": 1,
-        "price_change": 0.11189397581945633,
-        "current_close": 1.1004394864302247,
-        "next_close": 1.1016708119230787
-      },
-      {
-        "date": "2020-05-18",
-        "similarity": 0.8150366760270302,
-        "direction": -1,
-        "price_change": -0.6154321582169809,
-        "current_close": 1.0419610389586864,
-        "next_close": 1.035548475648843
-      },
-      {
-        "date": "2021-05-07",
-        "similarity": 0.8122937270791071,
-        "direction": -1,
-        "price_change": -0.43064210066413283,
-        "current_close": 1.125152251786399,
-        "next_close": 1.1203068724936363
-      }
+  "timestamp": "2026-05-12T04:10:12.590289",
+  "parameters": {
+    "pairs": [
+      "ETHUSDT",
+      "SOLUSDT"
     ],
-    "symbol": "EURUSD"
+    "source": "bybit",
+    "similarity_threshold": 0.65,
+    "max_matches": 30
   },
-  "GBPUSD": {
-    "status": "success",
-    "current_date": "2026-05-12",
-    "current_signature": {
-      "moon_longitude": 7.9925329428951954,
-      "moon_sign": 0,
-      "moon_phase": "Waning Crescent",
-      "moon_illumination": 12.911344786651425,
-      "moon_phase_id": 7,
-      "sun_longitude": 50.109856262834,
-      "sun_sign": 1,
-      "mercury_longitude": 62.50478572240536,
-      "mercury_sign": 2,
-      "venus_longitude": 130.7671562082778,
-      "venus_sign": 4,
-      "mars_longitude": 118.58705639174332,
-      "mars_sign": 3,
-      "jupiter_longitude": 318.7018464705868,
-      "jupiter_sign": 10,
-      "saturn_longitude": 12.249746914739205,
-      "saturn_sign": 0,
-      "sun_moon_aspect": "None",
-      "venus_mars_aspect": "None"
+  "results": {
+    "ETHUSDT": {
+      "analysis_date": "2026-05-12T00:00:00",
+      "astro_signature": {
+        "moon_phase": "Waning Crescent",
+        "moon_phase_value": 0.8397719498551718,
+        "sun_position": 49.58,
+        "moon_position": 1.42,
+        "aspect_count": 9,
+        "dominant_aspect": "Conjunction"
+      },
+      "forecast": {
+        "direction": "BULLISH",
+        "confidence": 0.103,
+        "bullish_count": 16,
+        "bearish_count": 13,
+        "neutral_count": 0,
+        "total_matches": 29,
+        "avg_strength": 0.0202,
+        "bullish_ratio": 0.551,
+        "top_matches": [
+          {
+            "date": "2025-05-22 00:00:00",
+            "similarity": 0.8817444782003317,
+            "direction": "BULLISH",
+            "strength": 0.04477529984860501,
+            "open": 2549.62,
+            "close": 2663.78,
+            "high": 2693.07,
+            "low": 2542.86,
+            "astro_sig": {
+              "date": "2025-05-22 00:00:00",
+              "moon_phase_val": 0.8183387177895003,
+              "moon_phase_name": "Waning Crescent",
+              "moon_sector": 0,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 0,
+                "Mercury_sector": 1,
+                "Venus_sector": 9,
+                "Mars_sector": 5,
+                "Jupiter_sector": 2,
+                "Saturn_sector": 0
+              },
+              "positions": {
+                "Sun": 59.68,
+                "Moon": 3.53,
+                "Mercury": 38.14,
+                "Venus": 277.79,
+                "Mars": 174.52,
+                "Jupiter": 84.81,
+                "Saturn": 0.32
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 3.85,
+                  "exactness": 0.3579023072300819
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 5.16,
+                  "exactness": 0.35546385795748847
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 0.65,
+                  "exactness": 0.8924799877129885
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Venus",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 4.26,
+                  "exactness": 0.3920792891536361
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Saturn",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 3.21,
+                  "exactness": 0.59906673963782
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 0.35,
+                  "exactness": 0.9558873900375602
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 0.29,
+                  "exactness": 0.9586414474734966
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Saturn",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 5.8,
+                  "exactness": 0.27482384874222987
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 5.51,
+                  "exactness": 0.21258580823190898
+                }
+              ],
+              "aspect_count": 9,
+              "dominant_aspect": "Sextile"
+            }
+          },
+          {
+            "date": "2025-04-27 00:00:00",
+            "similarity": 0.778226567935795,
+            "direction": "BEARISH",
+            "strength": 0.01637804100828514,
+            "open": 1820.12,
+            "close": 1790.31,
+            "high": 1857.15,
+            "low": 1779.7,
+            "astro_sig": {
+              "date": "2025-04-27 00:00:00",
+              "moon_phase_val": 0.971758912714453,
+              "moon_phase_name": "New Moon",
+              "moon_sector": 1,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 1,
+                "Mercury_sector": 9,
+                "Venus_sector": 7,
+                "Mars_sector": 5,
+                "Jupiter_sector": 2,
+                "Saturn_sector": 11
+              },
+              "positions": {
+                "Sun": 35.04,
+                "Moon": 34.1,
+                "Mercury": 295.83,
+                "Venus": 237.73,
+                "Mars": 161.42,
+                "Jupiter": 82.74,
+                "Saturn": 359.49
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 0.94,
+                  "exactness": 0.883031686214963
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 6.38,
+                  "exactness": 0.2020562656820175
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 7.32,
+                  "exactness": 0.08508795189698048
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.9,
+                  "exactness": 0.6831167589649947
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 3.66,
+                  "exactness": 0.39078315631311966
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Saturn",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 1.75,
+                  "exactness": 0.7807497980110938
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 6.75,
+                  "exactness": 0.035330444576849085
+                }
+              ],
+              "aspect_count": 7,
+              "dominant_aspect": "Conjunction"
+            }
+          },
+          {
+            "date": "2024-05-08 00:00:00",
+            "similarity": 0.7740832478900183,
+            "direction": "BEARISH",
+            "strength": 0.010483540840879818,
+            "open": 3004.71,
+            "close": 2973.21,
+            "high": 3037.71,
+            "low": 2934.42,
+            "astro_sig": {
+              "date": "2024-05-08 00:00:00",
+              "moon_phase_val": 0.9841888728517835,
+              "moon_phase_name": "New Moon",
+              "moon_sector": 1,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 1,
+                "Mercury_sector": 9,
+                "Venus_sector": 1,
+                "Mars_sector": 11,
+                "Jupiter_sector": 1,
+                "Saturn_sector": 11
+              },
+              "positions": {
+                "Sun": 46.13,
+                "Moon": 49.39,
+                "Mercury": 287.16,
+                "Venus": 30.58,
+                "Mars": 335.92,
+                "Jupiter": 53.32,
+                "Saturn": 347.64
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 3.26,
+                  "exactness": 0.5923171342155911
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mercury",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 1.03,
+                  "exactness": 0.8712495436657264
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Jupiter",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 7.19,
+                  "exactness": 0.10074671644336775
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.52,
+                  "exactness": 0.7472891996826074
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Mercury",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 2.23,
+                  "exactness": 0.7210675905498647
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Jupiter",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 3.93,
+                  "exactness": 0.5084295822277767
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.75,
+                  "exactness": 0.7091336459381807
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Jupiter",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 6.16,
+                  "exactness": 0.22949717277764137
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 0.49,
+                  "exactness": 0.9189564747949722
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Mars",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 5.34,
+                  "exactness": 0.11051824051992298
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 5.68,
+                  "exactness": 0.053706422241882934
+                }
+              ],
+              "aspect_count": 11,
+              "dominant_aspect": "Conjunction"
+            }
+          },
+          {
+            "date": "2025-05-21 00:00:00",
+            "similarity": 0.7593456363548867,
+            "direction": "BULLISH",
+            "strength": 0.010386738579937481,
+            "open": 2523.41,
+            "close": 2549.62,
+            "high": 2616.17,
+            "low": 2450.72,
+            "astro_sig": {
+              "date": "2025-05-21 00:00:00",
+              "moon_phase_val": 0.7844755255864984,
+              "moon_phase_name": "Waning Crescent",
+              "moon_sector": 11,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 11,
+                "Mercury_sector": 1,
+                "Venus_sector": 9,
+                "Mars_sector": 5,
+                "Jupiter_sector": 2,
+                "Saturn_sector": 0
+              },
+              "positions": {
+                "Sun": 58.69,
+                "Moon": 350.36,
+                "Mercury": 34.05,
+                "Venus": 276.19,
+                "Mars": 174.0,
+                "Jupiter": 84.73,
+                "Saturn": 0.29
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 4.69,
+                  "exactness": 0.4131630530118855
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.6,
+                  "exactness": 0.7337855529161175
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Mars",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 3.64,
+                  "exactness": 0.5444685532320364
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 4.37,
+                  "exactness": 0.37504243023545314
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 2.14,
+                  "exactness": 0.732841608333274
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 5.89,
+                  "exactness": 0.15796649259522966
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 0.73,
+                  "exactness": 0.8956497979702688
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Saturn",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 6.29,
+                  "exactness": 0.2135022176989736
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 5.56,
+                  "exactness": 0.20549559368570114
+                }
+              ],
+              "aspect_count": 9,
+              "dominant_aspect": "Trine"
+            }
+          },
+          {
+            "date": "2024-04-08 00:00:00",
+            "similarity": 0.7571596143644816,
+            "direction": "BULLISH",
+            "strength": 0.06974073238328334,
+            "open": 3456.66,
+            "close": 3697.73,
+            "high": 3733.71,
+            "low": 3408.03,
+            "astro_sig": {
+              "date": "2024-04-08 00:00:00",
+              "moon_phase_val": 0.9682931067617268,
+              "moon_phase_name": "Waning Crescent",
+              "moon_sector": 0,
+              "sun_sector": 0,
+              "sectors": {
+                "Sun_sector": 0,
+                "Moon_sector": 0,
+                "Mercury_sector": 5,
+                "Venus_sector": 11,
+                "Mars_sector": 10,
+                "Jupiter_sector": 1,
+                "Saturn_sector": 11
+              },
+              "positions": {
+                "Sun": 16.56,
+                "Moon": 14.07,
+                "Mercury": 164.39,
+                "Venus": 342.51,
+                "Mars": 320.19,
+                "Jupiter": 50.83,
+                "Saturn": 346.64
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 2.48,
+                  "exactness": 0.6894329657488925
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 3.64,
+                  "exactness": 0.3940871530500468
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 1.87,
+                  "exactness": 0.7657270565214276
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Jupiter",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 6.44,
+                  "exactness": 0.1949483545195676
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Saturn",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 2.25,
+                  "exactness": 0.7185504060003538
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Saturn",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 4.13,
+                  "exactness": 0.4842774625217814
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 0.63,
+                  "exactness": 0.9093425149292541
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 4.19,
+                  "exactness": 0.30186393135895173
+                }
+              ],
+              "aspect_count": 8,
+              "dominant_aspect": "Conjunction"
+            }
+          }
+        ]
+      },
+      "matches_found": 29
     },
-    "total_matches": 10,
-    "bullish_count": 5,
-    "bearish_count": 5,
-    "neutral_count": 0,
-    "bullish_percentage": 50.0,
-    "bearish_percentage": 50.0,
-    "avg_price_change": 0.05472027007965245,
-    "weighted_direction": 0.01036250587674902,
-    "prediction": "NEUTRAL",
-    "confidence": 98.9637494123251,
-    "matches": [
-      {
-        "date": "2024-05-04",
-        "similarity": 0.9036006206231587,
-        "direction": 1,
-        "price_change": 0.0882207776386213,
-        "current_close": 1.5205730047918056,
-        "next_close": 1.5219144661211959
+    "SOLUSDT": {
+      "analysis_date": "2026-05-12T00:00:00",
+      "astro_signature": {
+        "moon_phase": "Waning Crescent",
+        "moon_phase_value": 0.8397719498551718,
+        "sun_position": 49.58,
+        "moon_position": 1.42,
+        "aspect_count": 9,
+        "dominant_aspect": "Conjunction"
       },
-      {
-        "date": "2024-06-02",
-        "similarity": 0.9007197658580556,
-        "direction": 1,
-        "price_change": 1.5965537839224342,
-        "current_close": 1.4743510495211642,
-        "next_close": 1.4978898569905945
+      "forecast": {
+        "direction": "BULLISH",
+        "confidence": 0.103,
+        "bullish_count": 16,
+        "bearish_count": 13,
+        "neutral_count": 0,
+        "total_matches": 29,
+        "avg_strength": 0.0299,
+        "bullish_ratio": 0.556,
+        "top_matches": [
+          {
+            "date": "2025-05-22 00:00:00",
+            "similarity": 0.8817444782003317,
+            "direction": "BULLISH",
+            "strength": 0.03527377521613836,
+            "open": 173.5,
+            "close": 179.62,
+            "high": 180.86,
+            "low": 172.51,
+            "astro_sig": {
+              "date": "2025-05-22 00:00:00",
+              "moon_phase_val": 0.8183387177895003,
+              "moon_phase_name": "Waning Crescent",
+              "moon_sector": 0,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 0,
+                "Mercury_sector": 1,
+                "Venus_sector": 9,
+                "Mars_sector": 5,
+                "Jupiter_sector": 2,
+                "Saturn_sector": 0
+              },
+              "positions": {
+                "Sun": 59.68,
+                "Moon": 3.53,
+                "Mercury": 38.14,
+                "Venus": 277.79,
+                "Mars": 174.52,
+                "Jupiter": 84.81,
+                "Saturn": 0.32
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 3.85,
+                  "exactness": 0.3579023072300819
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 5.16,
+                  "exactness": 0.35546385795748847
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 0.65,
+                  "exactness": 0.8924799877129885
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Venus",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 4.26,
+                  "exactness": 0.3920792891536361
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Saturn",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 3.21,
+                  "exactness": 0.59906673963782
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 0.35,
+                  "exactness": 0.9558873900375602
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 0.29,
+                  "exactness": 0.9586414474734966
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Saturn",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 5.8,
+                  "exactness": 0.27482384874222987
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 5.51,
+                  "exactness": 0.21258580823190898
+                }
+              ],
+              "aspect_count": 9,
+              "dominant_aspect": "Sextile"
+            }
+          },
+          {
+            "date": "2025-04-27 00:00:00",
+            "similarity": 0.778226567935795,
+            "direction": "BEARISH",
+            "strength": 0.008581964465303394,
+            "open": 149.15,
+            "close": 147.87,
+            "high": 150.38,
+            "low": 145.4,
+            "astro_sig": {
+              "date": "2025-04-27 00:00:00",
+              "moon_phase_val": 0.971758912714453,
+              "moon_phase_name": "New Moon",
+              "moon_sector": 1,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 1,
+                "Mercury_sector": 9,
+                "Venus_sector": 7,
+                "Mars_sector": 5,
+                "Jupiter_sector": 2,
+                "Saturn_sector": 11
+              },
+              "positions": {
+                "Sun": 35.04,
+                "Moon": 34.1,
+                "Mercury": 295.83,
+                "Venus": 237.73,
+                "Mars": 161.42,
+                "Jupiter": 82.74,
+                "Saturn": 359.49
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 0.94,
+                  "exactness": 0.883031686214963
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 6.38,
+                  "exactness": 0.2020562656820175
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 7.32,
+                  "exactness": 0.08508795189698048
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.9,
+                  "exactness": 0.6831167589649947
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 3.66,
+                  "exactness": 0.39078315631311966
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Saturn",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 1.75,
+                  "exactness": 0.7807497980110938
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 6.75,
+                  "exactness": 0.035330444576849085
+                }
+              ],
+              "aspect_count": 7,
+              "dominant_aspect": "Conjunction"
+            }
+          },
+          {
+            "date": "2024-05-08 00:00:00",
+            "similarity": 0.7740832478900183,
+            "direction": "BEARISH",
+            "strength": 0.039929734477400156,
+            "open": 148.01,
+            "close": 142.1,
+            "high": 149.88,
+            "low": 139.91,
+            "astro_sig": {
+              "date": "2024-05-08 00:00:00",
+              "moon_phase_val": 0.9841888728517835,
+              "moon_phase_name": "New Moon",
+              "moon_sector": 1,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 1,
+                "Mercury_sector": 9,
+                "Venus_sector": 1,
+                "Mars_sector": 11,
+                "Jupiter_sector": 1,
+                "Saturn_sector": 11
+              },
+              "positions": {
+                "Sun": 46.13,
+                "Moon": 49.39,
+                "Mercury": 287.16,
+                "Venus": 30.58,
+                "Mars": 335.92,
+                "Jupiter": 53.32,
+                "Saturn": 347.64
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 3.26,
+                  "exactness": 0.5923171342155911
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mercury",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 1.03,
+                  "exactness": 0.8712495436657264
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Jupiter",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 7.19,
+                  "exactness": 0.10074671644336775
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.52,
+                  "exactness": 0.7472891996826074
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Mercury",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 2.23,
+                  "exactness": 0.7210675905498647
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Jupiter",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 3.93,
+                  "exactness": 0.5084295822277767
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.75,
+                  "exactness": 0.7091336459381807
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Jupiter",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 6.16,
+                  "exactness": 0.22949717277764137
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 0.49,
+                  "exactness": 0.9189564747949722
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Mars",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 5.34,
+                  "exactness": 0.11051824051992298
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 5.68,
+                  "exactness": 0.053706422241882934
+                }
+              ],
+              "aspect_count": 11,
+              "dominant_aspect": "Conjunction"
+            }
+          },
+          {
+            "date": "2025-05-21 00:00:00",
+            "similarity": 0.7593456363548867,
+            "direction": "BULLISH",
+            "strength": 0.029490298463181623,
+            "open": 168.53,
+            "close": 173.5,
+            "high": 175.96,
+            "low": 165.42,
+            "astro_sig": {
+              "date": "2025-05-21 00:00:00",
+              "moon_phase_val": 0.7844755255864984,
+              "moon_phase_name": "Waning Crescent",
+              "moon_sector": 11,
+              "sun_sector": 1,
+              "sectors": {
+                "Sun_sector": 1,
+                "Moon_sector": 11,
+                "Mercury_sector": 1,
+                "Venus_sector": 9,
+                "Mars_sector": 5,
+                "Jupiter_sector": 2,
+                "Saturn_sector": 0
+              },
+              "positions": {
+                "Sun": 58.69,
+                "Moon": 350.36,
+                "Mercury": 34.05,
+                "Venus": 276.19,
+                "Mars": 174.0,
+                "Jupiter": 84.73,
+                "Saturn": 0.29
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 4.69,
+                  "exactness": 0.4131630530118855
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 1.6,
+                  "exactness": 0.7337855529161175
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Mars",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 3.64,
+                  "exactness": 0.5444685532320364
+                },
+                {
+                  "planet1": "Moon",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 4.37,
+                  "exactness": 0.37504243023545314
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 2.14,
+                  "exactness": 0.732841608333274
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 5.89,
+                  "exactness": 0.15796649259522966
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 0.73,
+                  "exactness": 0.8956497979702688
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Saturn",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 6.29,
+                  "exactness": 0.2135022176989736
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 5.56,
+                  "exactness": 0.20549559368570114
+                }
+              ],
+              "aspect_count": 9,
+              "dominant_aspect": "Trine"
+            }
+          },
+          {
+            "date": "2024-04-08 00:00:00",
+            "similarity": 0.7571596143644816,
+            "direction": "BULLISH",
+            "strength": 0.005897735492127093,
+            "open": 179.73,
+            "close": 180.79,
+            "high": 184.86,
+            "low": 174.6,
+            "astro_sig": {
+              "date": "2024-04-08 00:00:00",
+              "moon_phase_val": 0.9682931067617268,
+              "moon_phase_name": "Waning Crescent",
+              "moon_sector": 0,
+              "sun_sector": 0,
+              "sectors": {
+                "Sun_sector": 0,
+                "Moon_sector": 0,
+                "Mercury_sector": 5,
+                "Venus_sector": 11,
+                "Mars_sector": 10,
+                "Jupiter_sector": 1,
+                "Saturn_sector": 11
+              },
+              "positions": {
+                "Sun": 16.56,
+                "Moon": 14.07,
+                "Mercury": 164.39,
+                "Venus": 342.51,
+                "Mars": 320.19,
+                "Jupiter": 50.83,
+                "Saturn": 346.64
+              },
+              "aspects": [
+                {
+                  "planet1": "Sun",
+                  "planet2": "Moon",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 2.48,
+                  "exactness": 0.6894329657488925
+                },
+                {
+                  "planet1": "Sun",
+                  "planet2": "Mars",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 3.64,
+                  "exactness": 0.3940871530500468
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Venus",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 1.87,
+                  "exactness": 0.7657270565214276
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Jupiter",
+                  "type": "Trine",
+                  "angle": 120,
+                  "orb": 6.44,
+                  "exactness": 0.1949483545195676
+                },
+                {
+                  "planet1": "Mercury",
+                  "planet2": "Saturn",
+                  "type": "Opposition",
+                  "angle": 180,
+                  "orb": 2.25,
+                  "exactness": 0.7185504060003538
+                },
+                {
+                  "planet1": "Venus",
+                  "planet2": "Saturn",
+                  "type": "Conjunction",
+                  "angle": 0,
+                  "orb": 4.13,
+                  "exactness": 0.4842774625217814
+                },
+                {
+                  "planet1": "Mars",
+                  "planet2": "Jupiter",
+                  "type": "Square",
+                  "angle": 90,
+                  "orb": 0.63,
+                  "exactness": 0.9093425149292541
+                },
+                {
+                  "planet1": "Jupiter",
+                  "planet2": "Saturn",
+                  "type": "Sextile",
+                  "angle": 60,
+                  "orb": 4.19,
+                  "exactness": 0.30186393135895173
+                }
+              ],
+              "aspect_count": 8,
+              "dominant_aspect": "Conjunction"
+            }
+          }
+        ]
       },
-      {
-        "date": "2021-06-05",
-        "similarity": 0.8880017432219575,
-        "direction": -1,
-        "price_change": -0.33131187947292295,
-        "current_close": 1.0961698742767465,
-        "next_close": 1.0925381332640642
-      },
-      {
-        "date": "2024-05-05",
-        "similarity": 0.8823590530454708,
-        "direction": -1,
-        "price_change": -0.18351391954165916,
-        "current_close": 1.5219144661211959,
-        "next_close": 1.5191215412323453
-      },
-      {
-        "date": "2023-04-18",
-        "similarity": 0.8697497020054189,
-        "direction": 1,
-        "price_change": 0.024430035162853452,
-        "current_close": 1.367177182541955,
-        "next_close": 1.3675111844083885
-      },
-      {
-        "date": "2024-05-06",
-        "similarity": 0.8684065652133128,
-        "direction": -1,
-        "price_change": -0.41379511032436245,
-        "current_close": 1.5191215412323453,
-        "next_close": 1.5128354905748418
-      },
-      {
-        "date": "2026-04-15",
-        "similarity": 0.8656581631046404,
-        "direction": 1,
-        "price_change": 0.7007992964732177,
-        "current_close": 1.5665849022658669,
-        "next_close": 1.5775635182396017
-      },
-      {
-        "date": "2022-05-26",
-        "similarity": 0.815710233044782,
-        "direction": 1,
-        "price_change": 0.11189397581945633,
-        "current_close": 1.1004394864302247,
-        "next_close": 1.1016708119230787
-      },
-      {
-        "date": "2020-05-18",
-        "similarity": 0.8150366760270302,
-        "direction": -1,
-        "price_change": -0.6154321582169809,
-        "current_close": 1.0419610389586864,
-        "next_close": 1.035548475648843
-      },
-      {
-        "date": "2021-05-07",
-        "similarity": 0.8122937270791071,
-        "direction": -1,
-        "price_change": -0.43064210066413283,
-        "current_close": 1.125152251786399,
-        "next_close": 1.1203068724936363
-      }
-    ],
-    "symbol": "GBPUSD"
+      "matches_found": 29
+    }
   }
 }
