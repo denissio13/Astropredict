@@ -1,0 +1,277 @@
+{
+  "status": "success",
+  "current_date": "2026-05-12",
+  "current_signature": {
+    "moon_longitude": 7.9925329428951954,
+    "moon_sign": 0,
+    "moon_phase": "Waning Crescent",
+    "moon_illumination": 12.911344786651425,
+    "moon_phase_id": 7,
+    "sun_longitude": 50.109856262834,
+    "sun_sign": 1,
+    "mercury_longitude": 62.50478572240536,
+    "mercury_sign": 2,
+    "venus_longitude": 130.7671562082778,
+    "venus_sign": 4,
+    "mars_longitude": 118.58705639174332,
+    "mars_sign": 3,
+    "jupiter_longitude": 318.7018464705868,
+    "jupiter_sign": 10,
+    "saturn_longitude": 12.249746914739205,
+    "saturn_sign": 0,
+    "sun_moon_aspect": "None",
+    "venus_mars_aspect": "None"
+  },
+  "total_matches": 30,
+  "bullish_count": 16,
+  "bearish_count": 14,
+  "neutral_count": 0,
+  "bullish_percentage": 53.333333333333336,
+  "bearish_percentage": 46.666666666666664,
+  "avg_price_change": 0.06365700045042257,
+  "weighted_direction": 0.07130393667355459,
+  "prediction": "NEUTRAL",
+  "confidence": 92.86960633264454,
+  "matches": [
+    {
+      "date": "2024-05-04",
+      "similarity": 0.9036006206231587,
+      "direction": 1,
+      "price_change": 0.0882207776386213,
+      "current_close": 1.5205730047918056,
+      "next_close": 1.5219144661211959
+    },
+    {
+      "date": "2024-06-02",
+      "similarity": 0.9007197658580556,
+      "direction": 1,
+      "price_change": 1.5965537839224342,
+      "current_close": 1.4743510495211642,
+      "next_close": 1.4978898569905945
+    },
+    {
+      "date": "2021-06-05",
+      "similarity": 0.8880017432219575,
+      "direction": -1,
+      "price_change": -0.33131187947292295,
+      "current_close": 1.0961698742767465,
+      "next_close": 1.0925381332640642
+    },
+    {
+      "date": "2024-05-05",
+      "similarity": 0.8823590530454708,
+      "direction": -1,
+      "price_change": -0.18351391954165916,
+      "current_close": 1.5219144661211959,
+      "next_close": 1.5191215412323453
+    },
+    {
+      "date": "2023-04-18",
+      "similarity": 0.8697497020054189,
+      "direction": 1,
+      "price_change": 0.024430035162853452,
+      "current_close": 1.367177182541955,
+      "next_close": 1.3675111844083885
+    },
+    {
+      "date": "2024-05-06",
+      "similarity": 0.8684065652133128,
+      "direction": -1,
+      "price_change": -0.41379511032436245,
+      "current_close": 1.5191215412323453,
+      "next_close": 1.5128354905748418
+    },
+    {
+      "date": "2026-04-15",
+      "similarity": 0.8656581631046404,
+      "direction": 1,
+      "price_change": 0.7007992964732177,
+      "current_close": 1.5665849022658669,
+      "next_close": 1.5775635182396017
+    },
+    {
+      "date": "2022-05-26",
+      "similarity": 0.815710233044782,
+      "direction": 1,
+      "price_change": 0.11189397581945633,
+      "current_close": 1.1004394864302247,
+      "next_close": 1.1016708119230787
+    },
+    {
+      "date": "2020-05-18",
+      "similarity": 0.8150366760270302,
+      "direction": -1,
+      "price_change": -0.6154321582169809,
+      "current_close": 1.0419610389586864,
+      "next_close": 1.035548475648843
+    },
+    {
+      "date": "2021-05-07",
+      "similarity": 0.8122937270791071,
+      "direction": -1,
+      "price_change": -0.43064210066413283,
+      "current_close": 1.125152251786399,
+      "next_close": 1.1203068724936363
+    },
+    {
+      "date": "2025-05-23",
+      "similarity": 0.8096190390934693,
+      "direction": 1,
+      "price_change": 0.29677836114043404,
+      "current_close": 1.6583137455588386,
+      "next_close": 1.6632352619154747
+    },
+    {
+      "date": "2023-05-15",
+      "similarity": 0.8062345726241847,
+      "direction": -1,
+      "price_change": -0.6849014897895428,
+      "current_close": 1.3773683292895904,
+      "next_close": 1.3679347130823967
+    },
+    {
+      "date": "2023-05-16",
+      "similarity": 0.8046091154982019,
+      "direction": -1,
+      "price_change": -0.04414102417563345,
+      "current_close": 1.3679347130823967,
+      "next_close": 1.367330892689988
+    },
+    {
+      "date": "2021-05-08",
+      "similarity": 0.7999162972332626,
+      "direction": 1,
+      "price_change": 0.7615620386348245,
+      "current_close": 1.1203068724936363,
+      "next_close": 1.1288387043507648
+    },
+    {
+      "date": "2025-05-22",
+      "similarity": 0.7999128296955131,
+      "direction": 1,
+      "price_change": 0.5668850484335374,
+      "current_close": 1.6489660038293779,
+      "next_close": 1.6583137455588386
+    },
+    {
+      "date": "2025-04-24",
+      "similarity": 0.7979820379421444,
+      "direction": -1,
+      "price_change": -0.19582428371089305,
+      "current_close": 1.619315720542082,
+      "next_close": 1.6161447071313126
+    },
+    {
+      "date": "2020-05-17",
+      "similarity": 0.7932180096702269,
+      "direction": 1,
+      "price_change": 0.40675860868484554,
+      "current_close": 1.037739942407184,
+      "next_close": 1.0419610389586864
+    },
+    {
+      "date": "2020-05-19",
+      "similarity": 0.7931529080461807,
+      "direction": 1,
+      "price_change": 0.11372996730205569,
+      "current_close": 1.035548475648843,
+      "next_close": 1.0367262045915953
+    },
+    {
+      "date": "2023-06-13",
+      "similarity": 0.790418125281413,
+      "direction": 1,
+      "price_change": 0.27916345626087047,
+      "current_close": 1.3771770289432925,
+      "next_close": 1.3810216039361214
+    },
+    {
+      "date": "2022-04-28",
+      "similarity": 0.7877722639091065,
+      "direction": -1,
+      "price_change": -0.26549847750090394,
+      "current_close": 1.0904551333720236,
+      "next_close": 1.0875599915950904
+    },
+    {
+      "date": "2020-04-20",
+      "similarity": 0.784447638648678,
+      "direction": -1,
+      "price_change": -0.013256937724601068,
+      "current_close": 1.0306136074510317,
+      "next_close": 1.0304769796469107
+    },
+    {
+      "date": "2021-05-09",
+      "similarity": 0.7826698843035093,
+      "direction": 1,
+      "price_change": 0.26945502184232367,
+      "current_close": 1.1288387043507648,
+      "next_close": 1.1318804169281378
+    },
+    {
+      "date": "2025-04-25",
+      "similarity": 0.7814317084498971,
+      "direction": 1,
+      "price_change": 0.13456347062255677,
+      "current_close": 1.6161447071313126,
+      "next_close": 1.6183194475395113
+    },
+    {
+      "date": "2021-04-10",
+      "similarity": 0.7766216669064211,
+      "direction": 1,
+      "price_change": 0.3070833500217243,
+      "current_close": 1.1159027984355072,
+      "next_close": 1.1193295501319291
+    },
+    {
+      "date": "2022-04-29",
+      "similarity": 0.7754984124390109,
+      "direction": -1,
+      "price_change": -0.3115702632123745,
+      "current_close": 1.0875599915950904,
+      "next_close": 1.0841714780666851
+    },
+    {
+      "date": "2020-04-21",
+      "similarity": 0.7738786434919409,
+      "direction": 1,
+      "price_change": 0.030115104970504937,
+      "current_close": 1.0304769796469107,
+      "next_close": 1.0307873088710282
+    },
+    {
+      "date": "2024-04-07",
+      "similarity": 0.7732949370541025,
+      "direction": -1,
+      "price_change": -0.13556180052129238,
+      "current_close": 1.5611137183496993,
+      "next_close": 1.5589974444849195
+    },
+    {
+      "date": "2023-06-12",
+      "similarity": 0.7569752320693283,
+      "direction": -1,
+      "price_change": -0.027884538828849868,
+      "current_close": 1.3775611555185943,
+      "next_close": 1.3771770289432925
+    },
+    {
+      "date": "2026-05-10",
+      "similarity": 0.7558126769976181,
+      "direction": 1,
+      "price_change": 0.22888643307594983,
+      "current_close": 1.650350265041209,
+      "next_close": 1.6541276928961213
+    },
+    {
+      "date": "2020-09-13",
+      "similarity": 0.7270587219231891,
+      "direction": -1,
+      "price_change": -0.35383473280938477,
+      "current_close": 1.104731585330193,
+      "next_close": 1.1008226612769791
+    }
+  ]
+}
