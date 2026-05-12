@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Astrological Trading Analyzer with Auto Data Fetching
+Astrological Trading Analyzer with Auto Data Fetching, Backtesting and Self-Learning
 Analyzes historical price data based on astrological patterns (Moon phases, planetary positions)
 to forecast the direction of the current daily candle for Crypto pairs.
 Fetches data automatically from Binance or Bybit.
 
+Features:
+    - Automatic data fetching from Binance/Bybit
+    - Astrological pattern matching
+    - Backtesting mode (--backtest)
+    - Parameter optimization (--optimize)
+    - Target date forecasting (--target-date)
+
 Usage:
     python astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT --source binance
     python astro_trading_analyzer.py --pairs SOLUSDT --source bybit --similarity 0.85
+    python astro_trading_analyzer.py --pairs BTCUSDT --backtest --candles 200
+    python astro_trading_analyzer.py --pairs BTCUSDT --optimize
+    python astro_trading_analyzer.py --pairs BTCUSDT --target-date 2024-06-15
 """
 
 import argparse
@@ -19,6 +29,7 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
+from itertools import product
 
 # Try to import optional heavy libraries
 try:
@@ -409,49 +420,54 @@ class PatternAnalyzer:
     def __init__(self, astro_engine: AstroEngine):
         self.astro = astro_engine
         
-    def calculate_similarity(self, sig1: Dict, sig2: Dict) -> float:
+    def calculate_similarity(self, sig1: Dict, sig2: Dict, 
+                             moon_phase_weight: float = 0.30,
+                             moon_sector_weight: float = 0.20,
+                             sun_sector_weight: float = 0.15,
+                             aspect_count_weight: float = 0.15,
+                             dominant_aspect_weight: float = 0.10) -> float:
         """
         Calculate similarity score between two astrological signatures
         Score ranges from 0.0 (completely different) to 1.0 (identical)
+        Weights are configurable for optimization
         """
         score = 0.0
         max_score = 0.0
         
-        # Moon phase similarity (weight: 30%)
+        # Moon phase similarity
         phase_diff = abs(sig1['moon_phase_val'] - sig2['moon_phase_val'])
         if phase_diff > 0.5:
             phase_diff = 1.0 - phase_diff
         phase_score = 1.0 - phase_diff
-        score += phase_score * 0.30
-        max_score += 0.30
+        score += phase_score * moon_phase_weight
+        max_score += moon_phase_weight
         
-        # Moon sector similarity (weight: 20%)
+        # Moon sector similarity
         if sig1['moon_sector'] == sig2['moon_sector']:
-            score += 0.20
+            score += moon_sector_weight
         else:
             # Adjacent sectors get partial credit
             diff = abs(sig1['moon_sector'] - sig2['moon_sector'])
             if diff == 1 or diff == 11:
-                score += 0.10
-        max_score += 0.20
+                score += moon_sector_weight * 0.5
+        max_score += moon_sector_weight
         
-        # Sun sector similarity (weight: 15%)
+        # Sun sector similarity
         if sig1['sun_sector'] == sig2['sun_sector']:
-            score += 0.15
-        max_score += 0.15
+            score += sun_sector_weight
+        max_score += sun_sector_weight
         
-        # Aspect pattern similarity (weight: 25%)
-        # Compare count and types
+        # Aspect pattern similarity
         count_diff = abs(sig1['aspect_count'] - sig2['aspect_count'])
         count_score = max(0, 1.0 - (count_diff * 0.2))
-        score += count_score * 0.15
-        max_score += 0.15
+        score += count_score * aspect_count_weight
+        max_score += aspect_count_weight
         
         # Check for same dominant aspect
         if sig1['dominant_aspect'] and sig2['dominant_aspect']:
             if sig1['dominant_aspect'] == sig2['dominant_aspect']:
-                score += 0.10
-        max_score += 0.10
+                score += dominant_aspect_weight
+        max_score += dominant_aspect_weight
         
         # Normalize to 0-1
         if max_score > 0:
@@ -566,19 +582,314 @@ class PatternAnalyzer:
             'top_matches': matches[:5]  # Include top 5 for reference
         }
 
+    def backtest(self, df: pd.DataFrame, candles: int = 200, 
+                 min_similarity: float = 0.65, max_matches: int = 50,
+                 tolerance: float = 0.0,
+                 moon_phase_weight: float = 0.30,
+                 moon_sector_weight: float = 0.20,
+                 sun_sector_weight: float = 0.15,
+                 aspect_count_weight: float = 0.15,
+                 dominant_aspect_weight: float = 0.10) -> Dict:
+        """
+        Backtest the strategy on historical data
+        Tests the last N candles and calculates accuracy statistics
+        
+        Args:
+            df: DataFrame with price data
+            candles: Number of candles to test
+            min_similarity: Minimum similarity threshold
+            max_matches: Maximum matches to consider
+            tolerance: Tolerance for direction prediction (0.0 = exact, 0.5 = any move)
+            moon_phase_weight: Weight for moon phase in similarity calculation
+            moon_sector_weight: Weight for moon sector
+            sun_sector_weight: Weight for sun sector
+            aspect_count_weight: Weight for aspect count
+            dominant_aspect_weight: Weight for dominant aspect
+            
+        Returns:
+            Dictionary with backtest statistics
+        """
+        print(f"\n🧪 BACKTESTING on last {candles} candles...")
+        print(f"   Similarity threshold: {min_similarity}")
+        print(f"   Max matches: {max_matches}")
+        print(f"   Weights: MoonPhase={moon_phase_weight}, MoonSector={moon_sector_weight}, "
+              f"SunSector={sun_sector_weight}, AspectCount={aspect_count_weight}, "
+              f"DominantAspect={dominant_aspect_weight}")
+        
+        # Get the last N candles for testing (need extra data for pattern matching)
+        test_start_idx = max(0, len(df) - candles - 500)  # Extra history for matching
+        test_df = df.iloc[test_start_idx:].copy()
+        test_dates = test_df.index[-candles:]
+        
+        results = []
+        
+        for i, test_date in enumerate(test_dates):
+            # Find similar patterns from data BEFORE this date
+            hist_df = df[df.index < test_date]
+            
+            if len(hist_df) < 50:  # Need enough history
+                continue
+                
+            target_sig = self.astro.generate_astro_signature(test_date)
+            matches = []
+            
+            cutoff_date = test_date - timedelta(days=2)
+            
+            for idx, row in hist_df[hist_df.index < cutoff_date].iterrows():
+                hist_date = idx.to_pydatetime()
+                hist_sig = self.astro.generate_astro_signature(hist_date)
+                
+                similarity = self.calculate_similarity(
+                    target_sig, hist_sig,
+                    moon_phase_weight=moon_phase_weight,
+                    moon_sector_weight=moon_sector_weight,
+                    sun_sector_weight=sun_sector_weight,
+                    aspect_count_weight=aspect_count_weight,
+                    dominant_aspect_weight=dominant_aspect_weight
+                )
+                
+                if similarity >= min_similarity:
+                    open_price = row['open']
+                    close_price = row['close']
+                    
+                    if close_price > open_price:
+                        direction = 'BULLISH'
+                        strength = (close_price - open_price) / open_price
+                    elif close_price < open_price:
+                        direction = 'BEARISH'
+                        strength = (open_price - close_price) / open_price
+                    else:
+                        direction = 'NEUTRAL'
+                        strength = 0.0
+                        
+                    matches.append({
+                        'date': hist_date,
+                        'similarity': similarity,
+                        'direction': direction,
+                        'strength': strength
+                    })
+            
+            matches.sort(key=lambda x: x['similarity'], reverse=True)
+            matches = matches[:max_matches]
+            
+            if not matches:
+                continue
+                
+            # Generate prediction
+            forecast = self.generate_forecast(matches)
+            
+            # Get actual result for test_date
+            actual_row = test_df.loc[test_date]
+            actual_open = actual_row['open']
+            actual_close = actual_row['close']
+            
+            if actual_close > actual_open:
+                actual_direction = 'BULLISH'
+            elif actual_close < actual_open:
+                actual_direction = 'BEARISH'
+            else:
+                actual_direction = 'NEUTRAL'
+            
+            # Check if prediction was correct
+            predicted_direction = forecast['direction']
+            
+            # Handle NEUTRAL/UNCERTAIN as no prediction
+            if predicted_direction in ['NEUTRAL', 'NEUTRAL/UNCERTAIN', 'UNKNOWN']:
+                match_result = 'NO_PREDICTION'
+            elif predicted_direction == actual_direction:
+                match_result = 'CORRECT'
+            else:
+                match_result = 'WRONG'
+            
+            results.append({
+                'date': test_date,
+                'predicted': predicted_direction,
+                'actual': actual_direction,
+                'result': match_result,
+                'confidence': forecast['confidence'],
+                'matches_found': len(matches)
+            })
+        
+        # Calculate statistics
+        total_predictions = len([r for r in results if r['result'] != 'NO_PREDICTION'])
+        correct_predictions = len([r for r in results if r['result'] == 'CORRECT'])
+        wrong_predictions = len([r for r in results if r['result'] == 'WRONG'])
+        no_predictions = len([r for r in results if r['result'] == 'NO_PREDICTION'])
+        
+        accuracy = correct_predictions / total_predictions if total_predictions > 0 else 0.0
+        
+        # Calculate confidence-weighted accuracy
+        confident_correct = 0
+        confident_total = 0
+        for r in results:
+            if r['result'] != 'NO_PREDICTION' and r['confidence'] >= 0.5:
+                confident_total += 1
+                if r['result'] == 'CORRECT':
+                    confident_correct += 1
+        
+        confident_accuracy = confident_correct / confident_total if confident_total > 0 else 0.0
+        
+        stats = {
+            'total_candles_tested': len(test_dates),
+            'predictions_made': total_predictions,
+            'no_predictions': no_predictions,
+            'correct': correct_predictions,
+            'wrong': wrong_predictions,
+            'accuracy': round(accuracy, 4),
+            'accuracy_percent': round(accuracy * 100, 2),
+            'confident_predictions': confident_total,
+            'confident_accuracy': round(confident_accuracy, 4),
+            'confident_accuracy_percent': round(confident_accuracy * 100, 2),
+            'parameters': {
+                'candles': candles,
+                'min_similarity': min_similarity,
+                'max_matches': max_matches,
+                'moon_phase_weight': moon_phase_weight,
+                'moon_sector_weight': moon_sector_weight,
+                'sun_sector_weight': sun_sector_weight,
+                'aspect_count_weight': aspect_count_weight,
+                'dominant_aspect_weight': dominant_aspect_weight
+            },
+            'detailed_results': results
+        }
+        
+        print(f"\n📊 BACKTEST RESULTS:")
+        print(f"   Total candles tested: {len(test_dates)}")
+        print(f"   Predictions made: {total_predictions}")
+        print(f"   No predictions (uncertain): {no_predictions}")
+        print(f"   ✅ Correct: {correct_predictions}")
+        print(f"   ❌ Wrong: {wrong_predictions}")
+        print(f"   📈 Accuracy: {accuracy*100:.2f}%")
+        print(f"   🎯 High-confidence accuracy: {confident_accuracy*100:.2f}% ({confident_total} trades)")
+        
+        return stats
+
+    def optimize_parameters(self, df: pd.DataFrame, candles: int = 200) -> Dict:
+        """
+        Optimize parameters by grid search to find best performing configuration
+        Tests different weight combinations and thresholds
+        
+        Returns:
+            Dictionary with optimal parameters and their performance
+        """
+        print("\n🔬 PARAMETER OPTIMIZATION (Grid Search)")
+        print("=" * 60)
+        
+        # Define parameter ranges
+        similarity_thresholds = [0.55, 0.60, 0.65, 0.70, 0.75]
+        max_matches_list = [30, 50, 75, 100]
+        
+        # Weight combinations (must sum to 1.0)
+        weight_configs = [
+            {'moon_phase': 0.30, 'moon_sector': 0.20, 'sun_sector': 0.15, 'aspect_count': 0.15, 'dominant': 0.20},
+            {'moon_phase': 0.35, 'moon_sector': 0.25, 'sun_sector': 0.15, 'aspect_count': 0.15, 'dominant': 0.10},
+            {'moon_phase': 0.25, 'moon_sector': 0.20, 'sun_sector': 0.20, 'aspect_count': 0.20, 'dominant': 0.15},
+            {'moon_phase': 0.40, 'moon_sector': 0.20, 'sun_sector': 0.15, 'aspect_count': 0.15, 'dominant': 0.10},
+            {'moon_phase': 0.20, 'moon_sector': 0.25, 'sun_sector': 0.20, 'aspect_count': 0.20, 'dominant': 0.15},
+            {'moon_phase': 0.30, 'moon_sector': 0.30, 'sun_sector': 0.15, 'aspect_count': 0.15, 'dominant': 0.10},
+        ]
+        
+        best_config = None
+        best_accuracy = 0.0
+        all_results = []
+        
+        total_combinations = len(similarity_thresholds) * len(max_matches_list) * len(weight_configs)
+        current = 0
+        
+        for sim_thresh in similarity_thresholds:
+            for max_m in max_matches_list:
+                for weights in weight_configs:
+                    current += 1
+                    print(f"\r   Testing config {current}/{total_combinations}...", end='', flush=True)
+                    
+                    try:
+                        stats = self.backtest(
+                            df=df,
+                            candles=candles,
+                            min_similarity=sim_thresh,
+                            max_matches=max_m,
+                            moon_phase_weight=weights['moon_phase'],
+                            moon_sector_weight=weights['moon_sector'],
+                            sun_sector_weight=weights['sun_sector'],
+                            aspect_count_weight=weights['aspect_count'],
+                            dominant_aspect_weight=weights['dominant']
+                        )
+                        
+                        result = {
+                            'similarity_threshold': sim_thresh,
+                            'max_matches': max_m,
+                            'weights': weights,
+                            'accuracy': stats['accuracy'],
+                            'accuracy_percent': stats['accuracy_percent'],
+                            'confident_accuracy': stats['confident_accuracy'],
+                            'confident_accuracy_percent': stats['confident_accuracy_percent'],
+                            'predictions_made': stats['predictions_made'],
+                            'confident_predictions': stats['confident_predictions']
+                        }
+                        all_results.append(result)
+                        
+                        # Prioritize configurations with good accuracy AND enough trades
+                        if stats['predictions_made'] >= 20:  # Minimum sample size
+                            score = stats['accuracy'] * 0.7 + stats['confident_accuracy'] * 0.3
+                            if score > best_accuracy:
+                                best_accuracy = score
+                                best_config = result
+                                
+                    except Exception as e:
+                        continue
+        
+        print("\n")
+        
+        if best_config:
+            print("=" * 60)
+            print("🏆 OPTIMAL CONFIGURATION FOUND:")
+            print("=" * 60)
+            print(f"   Similarity Threshold: {best_config['similarity_threshold']}")
+            print(f"   Max Matches: {best_config['max_matches']}")
+            print(f"   Weights:")
+            print(f"      • Moon Phase:     {best_config['weights']['moon_phase']}")
+            print(f"      • Moon Sector:    {best_config['weights']['moon_sector']}")
+            print(f"      • Sun Sector:     {best_config['weights']['sun_sector']}")
+            print(f"      • Aspect Count:   {best_config['weights']['aspect_count']}")
+            print(f"      • Dominant Aspect:{best_config['weights']['dominant']}")
+            print(f"\n   📈 Overall Accuracy: {best_config['accuracy_percent']:.2f}%")
+            print(f"   🎯 High-Confidence Accuracy: {best_config['confident_accuracy_percent']:.2f}%")
+            print(f"   📊 Predictions Made: {best_config['predictions_made']}")
+            print(f"   🎯 Confident Predictions: {best_config['confident_predictions']}")
+        else:
+            print("❌ Could not find optimal configuration with given constraints")
+        
+        # Sort all results by combined score
+        for r in all_results:
+            if r['predictions_made'] >= 20:
+                r['score'] = r['accuracy'] * 0.7 + r['confident_accuracy'] * 0.3
+            else:
+                r['score'] = 0.0
+        
+        all_results.sort(key=lambda x: x['score'], reverse=True)
+        
+        return {
+            'optimal_config': best_config,
+            'all_results': all_results[:20],  # Top 20 configurations
+            'total_tested': total_combinations
+        }
+
 # ============================================================================
 # MAIN EXECUTION
 # ============================================================================
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Astrological Crypto Trading Analyzer',
+        description='Astrological Crypto Trading Analyzer with Backtesting',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   python %(prog)s --pairs BTCUSDT
   python %(prog)s --pairs ETHUSDT,SOLUSDT,BNBUSDT --source bybit
   python %(prog)s --pairs BTCUSDT --similarity 0.8 --max-matches 30
+  python %(prog)s --pairs BTCUSDT --backtest --candles 200
+  python %(prog)s --pairs BTCUSDT --optimize --candles 200
+  python %(prog)s --pairs BTCUSDT --target-date 2024-06-15
         """
     )
     
@@ -625,6 +936,25 @@ Examples:
         help='Target date to forecast (YYYY-MM-DD format). If not specified, uses the last date in dataset.'
     )
     
+    parser.add_argument(
+        '--backtest',
+        action='store_true',
+        help='Run backtesting mode on historical data'
+    )
+    
+    parser.add_argument(
+        '--optimize',
+        action='store_true',
+        help='Run parameter optimization (grid search) to find best settings'
+    )
+    
+    parser.add_argument(
+        '--candles', '-c',
+        type=int,
+        default=200,
+        help='Number of candles to test in backtest/optimize mode (default: 200)'
+    )
+    
     args = parser.parse_args()
     
     # Parse pairs
@@ -668,7 +998,56 @@ Examples:
     
     results = {}
     
-    # Analyze each pair
+    # Handle backtest and optimize modes
+    if args.backtest or args.optimize:
+        for symbol, df in data_store.items():
+            print(f"\n{'='*60}")
+            print(f"🪐 {symbol} - SELF-LEARNING MODE")
+            print(f"{'='*60}")
+            
+            if args.backtest:
+                stats = analyzer.backtest(
+                    df=df,
+                    candles=args.candles,
+                    min_similarity=args.similarity,
+                    max_matches=args.max_matches
+                )
+                results[symbol] = {'backtest': stats}
+                
+                # Save backtest results
+                backtest_output = {
+                    'timestamp': datetime.now().isoformat(),
+                    'mode': 'backtest',
+                    'symbol': symbol,
+                    'results': stats
+                }
+                output_file = f"backtest_{symbol}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    json.dump(backtest_output, f, indent=2, default=str)
+                print(f"\n💾 Backtest results saved to: {output_file}")
+                
+            elif args.optimize:
+                opt_results = analyzer.optimize_parameters(df=df, candles=args.candles)
+                results[symbol] = {'optimization': opt_results}
+                
+                # Save optimization results
+                optimize_output = {
+                    'timestamp': datetime.now().isoformat(),
+                    'mode': 'optimize',
+                    'symbol': symbol,
+                    'results': opt_results
+                }
+                output_file = f"optimize_{symbol}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                with open(output_file, 'w', encoding='utf-8') as f:
+                    json.dump(optimize_output, f, indent=2, default=str)
+                print(f"\n💾 Optimization results saved to: {output_file}")
+        
+        print("\n" + "=" * 60)
+        print("✨ Self-Learning Analysis Complete!")
+        print("=" * 60)
+        sys.exit(0)
+    
+    # Analyze each pair (normal forecast mode)
     for symbol, df in data_store.items():
         print(f"\n{'='*60}")
         print(f"🪐 ANALYZING {symbol}")
