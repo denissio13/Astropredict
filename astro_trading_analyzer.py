@@ -618,6 +618,13 @@ Examples:
         help='Output JSON file path (default: astro_analysis_result.json)'
     )
     
+    parser.add_argument(
+        '--target-date', '-d',
+        type=str,
+        default=None,
+        help='Target date to forecast (YYYY-MM-DD format). If not specified, uses the last date in dataset.'
+    )
+    
     args = parser.parse_args()
     
     # Parse pairs
@@ -627,6 +634,16 @@ Examples:
     if not pairs:
         print("❌ Error: No valid pairs provided!")
         sys.exit(1)
+    
+    # Parse target date if specified
+    target_date_override = None
+    if args.target_date:
+        try:
+            target_date_override = datetime.strptime(args.target_date, '%Y-%m-%d')
+            print(f"🎯 Target Date for Forecast: {target_date_override.date()}")
+        except ValueError:
+            print(f"❌ Error: Invalid date format '{args.target_date}'. Use YYYY-MM-DD.")
+            sys.exit(1)
     
     print("=" * 60)
     print("🔮 ASTROLOGICAL CRYPTO TRADING ANALYZER")
@@ -657,9 +674,22 @@ Examples:
         print(f"🪐 ANALYZING {symbol}")
         print(f"{'='*60}")
         
-        # Get current date (last date in dataset)
-        current_date = df.index[-1]
-        print(f"📅 Analysis Date: {current_date.date()}")
+        # Determine analysis date: use override if specified, otherwise last date in dataset
+        if target_date_override:
+            # Check if target date exists in dataset or is in the future
+            if target_date_override > df.index[-1]:
+                current_date = df.index[-1]
+                print(f"⚠️  Target date {target_date_override.date()} is in the future. Using last available date: {current_date.date()}")
+            elif target_date_override in df.index:
+                current_date = target_date_override
+                print(f"📅 Analysis Date (specified): {current_date.date()}")
+            else:
+                # Find closest available date
+                current_date = df.index[min(range(len(df.index)), key=lambda i: abs((df.index[i] - target_date_override).total_seconds()))]
+                print(f"⚠️  Exact target date not in dataset. Using closest available: {current_date.date()}")
+        else:
+            current_date = df.index[-1]
+            print(f"📅 Analysis Date: {current_date.date()}")
         
         # Generate current astro signature
         current_sig = astro_engine.generate_astro_signature(current_date)
