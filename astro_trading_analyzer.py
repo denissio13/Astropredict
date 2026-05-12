@@ -437,18 +437,133 @@ def load_price_data(filepath: str) -> pd.DataFrame:
 
 def main():
     """Основная функция для запуска анализа"""
+    import argparse
     
-    # Пример использования
-    print("Запуск астрологического анализатора...")
+    # Настройка парсера аргументов
+    parser = argparse.ArgumentParser(
+        description='Астрологический анализ торговых паттернов',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Примеры использования:
+  python3 astro_trading_analyzer.py --pairs EURUSD
+  python3 astro_trading_analyzer.py --pairs EURUSD,GBPUSD,BTCUSD
+  python3 astro_trading_analyzer.py --pairs EURUSD --data my_data.csv
+        """
+    )
+    
+    parser.add_argument(
+        '--pairs', '-p',
+        type=str,
+        required=True,
+        help='Валютная пара или список пар через запятую (например: EURUSD или EURUSD,GBPUSD,BTCUSD)'
+    )
+    
+    parser.add_argument(
+        '--data', '-d',
+        type=str,
+        default=None,
+        help='Путь к CSV файлу с данными графика (по умолчанию используются тестовые данные)'
+    )
+    
+    parser.add_argument(
+        '--similarity', '-s',
+        type=float,
+        default=0.6,
+        help='Минимальный порог схожести паттернов (0.0-1.0, по умолчанию 0.6)'
+    )
+    
+    parser.add_argument(
+        '--max-matches', '-m',
+        type=int,
+        default=30,
+        help='Максимальное количество найденных паттернов (по умолчанию 30)'
+    )
+    
+    args = parser.parse_args()
+    
+    # Парсим список пар
+    pairs = [p.strip().upper() for p in args.pairs.split(',')]
+    
+    print("=" * 60)
+    print("АСТРОЛОГИЧЕСКИЙ АНАЛИЗАТОР ТОРГОВЫХ ПАТТЕРНОВ")
+    print("=" * 60)
+    print(f"\nАнализируемые пары: {', '.join(pairs)}")
+    print(f"Минимальная схожесть: {args.similarity}")
+    print(f"Максимум паттернов: {args.max_matches}")
     
     # Создаём анализатор
     analyzer = AstrologicalAnalyzer()
     
-    # Генерируем тестовые данные (в реальности загрузите из файла)
-    print("\nГенерация тестовых данных графика...")
+    # Обрабатываем каждую пару
+    all_results = {}
+    
+    for pair in pairs:
+        print(f"\n{'=' * 60}")
+        print(f"АНАЛИЗ ПАРЫ: {pair}")
+        print(f"{'=' * 60}")
+        
+        # Загружаем данные
+        if args.data:
+            print(f"\nЗагрузка данных из файла: {args.data}")
+            try:
+                price_data = load_price_data(args.data)
+            except FileNotFoundError:
+                print(f"Ошибка: Файл {args.data} не найден!")
+                print("Будут использованы тестовые данные.")
+                price_data = generate_test_data()
+        else:
+            print("\nГенерация тестовых данных графика...")
+            price_data = generate_test_data()
+        
+        # Текущая дата для анализа
+        current_date = datetime.now()
+        
+        print(f"\nАнализ паттернов для даты: {current_date.strftime('%Y-%m-%d')}")
+        
+        # Выполняем анализ
+        result = analyzer.analyze_historical_patterns(
+            price_data=price_data,
+            current_date=current_date,
+            min_similarity=args.similarity,
+            max_matches=args.max_matches
+        )
+        
+        # Добавляем информацию о паре
+        result['symbol'] = pair
+        
+        # Генерируем и выводим отчёт
+        report = analyzer.generate_report(result)
+        print("\n" + report)
+        
+        # Сохраняем результат
+        all_results[pair] = result
+    
+    # Сохраняем все результаты в JSON
+    output_file = 'astro_analysis_result.json'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        # Преобразуем даты в строки для JSON
+        results_serializable = {}
+        for pair, result in all_results.items():
+            result_copy = result.copy()
+            if 'matches' in result_copy:
+                for match in result_copy['matches']:
+                    match['date'] = match['date'].strftime('%Y-%m-%d')
+            results_serializable[pair] = result_copy
+        
+        json.dump(results_serializable, f, indent=2, default=str, ensure_ascii=False)
+    
+    print(f"\n{'=' * 60}")
+    print(f"Результаты сохранены в файл: {output_file}")
+    print(f"{'=' * 60}")
+    
+    return all_results
+
+
+def generate_test_data() -> pd.DataFrame:
+    """Генерация тестовых данных графика"""
     dates = pd.date_range(start='2020-01-01', end=datetime.now().strftime('%Y-%m-%d'), freq='D')
     
-    # Симулируем случайные данные графика (замените на реальные данные)
+    # Симулируем случайные данные графика
     np.random.seed(42)
     base_price = 1.1000
     prices = []
@@ -464,35 +579,7 @@ def main():
         'close': prices,
     }, index=dates)
     
-    # Текущая дата для анализа
-    current_date = datetime.now()
-    
-    print(f"\nАнализ паттернов для даты: {current_date.strftime('%Y-%m-%d')}")
-    
-    # Выполняем анализ
-    result = analyzer.analyze_historical_patterns(
-        price_data=price_data,
-        current_date=current_date,
-        min_similarity=0.6,
-        max_matches=30
-    )
-    
-    # Генерируем и выводим отчёт
-    report = analyzer.generate_report(result)
-    print("\n" + report)
-    
-    # Сохраняем результаты в JSON
-    with open('astro_analysis_result.json', 'w', encoding='utf-8') as f:
-        # Преобразуем даты в строки для JSON
-        result_serializable = result.copy()
-        if 'matches' in result_serializable:
-            for match in result_serializable['matches']:
-                match['date'] = match['date'].strftime('%Y-%m-%d')
-        json.dump(result_serializable, f, indent=2, default=str)
-    
-    print(f"\nРезультаты сохранены в файл: astro_analysis_result.json")
-    
-    return result
+    return price_data
 
 
 if __name__ == '__main__':
