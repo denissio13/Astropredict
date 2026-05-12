@@ -49,6 +49,7 @@ else:
     xp = np
 
 # Optional: Swiss Ephemeris
+HAS_SWISSEPHE = False
 try:
     import swisseph as swe
     HAS_SWISSEPHE = True
@@ -56,11 +57,6 @@ try:
     swe.set_ephe_path(None)
 except ImportError:
     HAS_SWISSEPHE = False
-    print("⚠️  swisseph not installed. Using simplified approximations.")
-    import swisseph as swe
-    HAS_SWISSEPH = True
-except ImportError:
-    HAS_SWISSEPH = False
     print("⚠️  swisseph not installed. Using simplified approximations.")
 
 DATA_DIR = Path("market_data")
