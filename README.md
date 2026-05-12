@@ -1,21 +1,23 @@
 # Астрологический анализатор торговых паттернов
 
-Скрипт для анализа исторических данных на предмет схожих астрологических паттернов и прогнозирования направления дневной свечи.
+Скрипт для автоматической загрузки криптовалютных данных с Binance/Bybit, анализа исторических данных на предмет схожих астрологических паттернов и прогнозирования направления дневной свечи.
 
 ## Возможности
 
+- **Автоматическая загрузка данных**: Скачивание исторических данных с Binance и Bybit для криптовалютных пар
 - **Расчёт положений планет**: Солнце, Луна, Меркурий, Венера, Марс, Юпитер, Сатурн
 - **Определение фазы Луны**: 8 фаз лунного цикла с процентом освещённости
 - **Расчёт аспектов**: Соединение, Секстиль, Квадрат, Трин, Оппозиция
 - **Поиск схожих паттернов**: Сравнение астрологических сигнатур дат
 - **Анализ ценовых движений**: Статистика бычьих/медвежьих свечей для схожих дат
 - **Прогноз направления**: BULLISH / BEARISH / NEUTRAL с уровнем уверенности
+- **Мульти-парный анализ**: Поддержка анализа нескольких пар одновременно
 
 ## Установка зависимостей
 
 ```bash
 # Обязательные зависимости
-pip install pandas numpy
+pip install pandas numpy requests
 
 # Опционально: для точных расчётов положений планет
 pip install swisseph
@@ -25,57 +27,64 @@ pip install swisseph
 
 ## Использование
 
-### Базовый запуск (с тестовыми данными)
+### Быстрый запуск с автоматической загрузкой данных
 
 ```bash
-python astro_trading_analyzer.py
+# Анализ одной пары
+python astro_trading_analyzer.py --pairs BTCUSDT
+
+# Анализ нескольких пар через запятую
+python astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT,SOLUSDT
+
+# Выбор биржи (по умолчанию Binance)
+python astro_trading_analyzer.py --pairs ETHUSDT --exchange bybit
+
+# Настройка параметров анализа
+python astro_trading_analyzer.py --pairs BTCUSDT --similarity 0.8 --max-matches 50
 ```
 
-### Использование с реальными данными
-
-1. Подготовьте CSV файл с историческими данными графика в формате:
-
-```csv
-date,open,high,low,close,volume
-2020-01-01,1.1234,1.1250,1.1200,1.1240,1000
-2020-01-02,1.1240,1.1280,1.1220,1.1270,1200
-...
-```
-
-2. Загрузите данные в скрипте:
-
-```python
-from astro_trading_analyzer import load_price_data, AstrologicalAnalyzer
-from datetime import datetime
-
-# Загрузка данных из CSV
-price_data = load_price_data('your_price_data.csv')
-
-# Создание анализатора
-analyzer = AstrologicalAnalyzer()
-
-# Дата для анализа
-current_date = datetime.now()
-
-# Анализ паттернов
-result = analyzer.analyze_historical_patterns(
-    price_data=price_data,
-    current_date=current_date,
-    min_similarity=0.7,  # Минимальная схожесть (0-1)
-    max_matches=30       # Максимум найденных паттернов
-)
-
-# Генерация отчёта
-report = analyzer.generate_report(result)
-print(report)
-```
-
-## Параметры анализа
+### Параметры командной строки
 
 | Параметр | Описание | Значение по умолчанию |
 |----------|----------|----------------------|
-| `min_similarity` | Минимальный порог схожести паттернов | 0.7 |
-| `max_matches` | Максимальное количество найденных паттернов | 20 |
+| `--pairs` | Список криптовалютных пар через запятую | Обязательно |
+| `--exchange` | Биржа для загрузки данных (binance/bybit) | binance |
+| `--data` | Путь к папке для сохранения данных | market_data/ |
+| `--similarity` | Минимальный порог схожести паттернов (0-1) | 0.7 |
+| `--max-matches` | Максимальное количество найденных паттернов | 30 |
+
+### Примеры команд
+
+```bash
+# Анализ Bitcoin с Binance
+python astro_trading_analyzer.py --pairs BTCUSDT
+
+# Анализ Ethereum и Solana с Bybit
+python astro_trading_analyzer.py --pairs ETHUSDT,SOLUSDT --exchange bybit
+
+# Глубокий анализ с большим количеством совпадений
+python astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT --similarity 0.6 --max-matches 100
+```
+
+## Хранение данных
+
+Скрипт автоматически скачивает и сохраняет исторические данные в папку `market_data/`:
+
+```
+market_data/
+├── binance_BTCUSDT_daily.csv
+├── binance_ETHUSDT_daily.csv
+└── bybit_SOLUSDT_daily.csv
+```
+
+Формат файлов CSV:
+```csv
+timestamp,open,high,low,close,volume
+2020-01-01 00:00:00,1.1234,1.1250,1.1200,1.1240,1000
+...
+```
+
+При повторном запуске скрипт использует кэшированные данные, если они есть.
 
 ## Веса параметров схожести
 
@@ -92,7 +101,8 @@ print(report)
 
 Скрипт генерирует:
 
-1. **Текстовый отчёт** в консоль с:
+1. **Текстовый отчёт** в консоль для каждой анализируемой пары с:
+   - Названием пары и биржей
    - Датой анализа
    - Количеством найденных паттернов
    - Статистикой бычьих/медвежьих свечей
@@ -100,7 +110,7 @@ print(report)
    - Текущей астрологической сигнатурой
    - Топ-5 наиболее схожих исторических паттернов
 
-2. **JSON файл** `astro_analysis_result.json` с полными данными анализа
+2. **JSON файл** `astro_analysis_result.json` с полными данными анализа по всем парам
 
 ## Пример вывода
 
@@ -109,6 +119,7 @@ print(report)
 АСТРОЛОГИЧЕСКИЙ АНАЛИЗ ТОРГОВОГО ПАТТЕРНА
 ============================================================
 
+Пара: BTCUSDT (Binance)
 Дата анализа: 2026-05-12
 
 Найдено схожих паттернов: 30
@@ -134,18 +145,57 @@ print(report)
 1. 2024-05-04 (схожесть: 0.90, изменение: +0.09%)
 2. 2024-06-02 (схожесть: 0.90, изменение: +1.60%)
 ...
+
+------------------------------------------------------------
+Пара: ETHUSDT (Binance)
+...
 ```
 
-## Структура класса `AstrologicalAnalyzer`
+## API для программного использования
 
-### Основные методы
+Скрипт также можно использовать как библиотеку в своём коде:
 
+```python
+from astro_trading_analyzer import CryptoDataLoader, AstrologicalAnalyzer
+from datetime import datetime
+
+# Загрузка данных с биржи
+loader = CryptoDataLoader(exchange='binance')
+price_data = loader.download_pair('BTCUSDT', timeframe='1d', limit=1000)
+
+# Создание анализатора
+analyzer = AstrologicalAnalyzer()
+
+# Дата для анализа
+current_date = datetime.now()
+
+# Анализ паттернов
+result = analyzer.analyze_historical_patterns(
+    price_data=price_data,
+    current_date=current_date,
+    min_similarity=0.7,
+    max_matches=30
+)
+
+# Генерация отчёта
+report = analyzer.generate_report(result, symbol='BTCUSDT')
+print(report)
+```
+
+### Основные классы и методы
+
+**CryptoDataLoader:**
+- `download_pair(symbol, timeframe='1d', limit=1000)` - Скачать данные пары
+- `save_to_csv(data, symbol, exchange)` - Сохранить в CSV
+- `load_from_csv(symbol, exchange)` - Загрузить из CSV
+
+**AstrologicalAnalyzer:**
 - `get_planet_position(date, planet_name)` - Положение планеты на дату
 - `get_moon_phase(date)` - Фаза и освещённость Луны
 - `get_astrological_signature(date)` - Полная астрологическая сигнатура
 - `calculate_pattern_similarity(sig1, sig2)` - Коэффициент схожести сигнатур
 - `analyze_historical_patterns(price_data, current_date, ...)` - Основной анализ
-- `generate_report(analysis_result)` - Генерация текстового отчёта
+- `generate_report(analysis_result, symbol='')` - Генерация текстового отчёта
 
 ## Важное предупреждение
 
