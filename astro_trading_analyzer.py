@@ -17,6 +17,7 @@ import math
 import os
 import sys
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
 # Try to import optional heavy libraries
@@ -155,6 +156,7 @@ def get_market_data(pairs: List[str], source: str = 'binance') -> Dict[str, pd.D
     """
     Orchestrates data fetching for a list of pairs.
     Returns a dictionary mapping symbol -> DataFrame
+    Данные сохраняются в папку market_data/<source>_<symbol>_daily.csv
     """
     data_store = {}
     source = source.lower()
@@ -163,17 +165,39 @@ def get_market_data(pairs: List[str], source: str = 'binance') -> Dict[str, pd.D
         print(f"⚠️  Unknown source '{source}'. Defaulting to Binance.")
         source = 'binance'
     
+    # Создаем директорию для кэширования данных
+    cache_dir = Path("market_data")
+    cache_dir.mkdir(exist_ok=True)
+    
     for pair in pairs:
-        df = pd.DataFrame()
-        if source == 'binance':
-            df = fetch_binance_data(pair)
-        elif source == 'bybit':
-            df = fetch_bybit_data(pair)
+        try:
+            filename = f"{source}_{pair.upper()}_daily.csv"
+            filepath = cache_dir / filename
             
-        if not df.empty:
-            data_store[pair] = df
-        else:
-            print(f"⚠️  Skipping {pair} due to data fetch failure.")
+            # Проверяем кэш
+            if filepath.exists():
+                print(f"[INFO] Загрузка данных из кэша: {filepath}")
+                df = pd.read_csv(filepath, parse_dates=['date'], index_col='date')
+            else:
+                # Скачиваем новые данные
+                if source == 'binance':
+                    df = fetch_binance_data(pair)
+                elif source == 'bybit':
+                    df = fetch_bybit_data(pair)
+                
+                # Сохраняем в кэш если данные получены успешно
+                if not df.empty:
+                    df.to_csv(filepath)
+                    print(f"[INFO] Данные сохранены в: {filepath}")
+            
+            if not df.empty:
+                data_store[pair.upper()] = df
+            else:
+                print(f"⚠️  Skipping {pair} due to empty data.")
+                
+        except Exception as e:
+            print(f"❌ Error fetching data for {pair}: {e}")
+            print(f"⚠️  Skipping {pair}.")
             
         # Small delay to be polite to APIs if many pairs
         if len(pairs) > 1:

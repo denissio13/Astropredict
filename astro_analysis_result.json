@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-05-12T04:10:12.590289",
+  "timestamp": "2026-05-12T04:22:13.993790",
   "parameters": {
     "pairs": [
       "ETHUSDT",
       "SOLUSDT"
     ],
-    "source": "bybit",
+    "source": "binance",
     "similarity_threshold": 0.65,
-    "max_matches": 30
+    "max_matches": 15
   },
   "results": {
     "ETHUSDT": {
@@ -21,24 +21,24 @@
         "dominant_aspect": "Conjunction"
       },
       "forecast": {
-        "direction": "BULLISH",
-        "confidence": 0.103,
-        "bullish_count": 16,
-        "bearish_count": 13,
+        "direction": "NEUTRAL/UNCERTAIN",
+        "confidence": 0.05,
+        "bullish_count": 8,
+        "bearish_count": 7,
         "neutral_count": 0,
-        "total_matches": 29,
-        "avg_strength": 0.0202,
-        "bullish_ratio": 0.551,
+        "total_matches": 15,
+        "avg_strength": 0.0186,
+        "bullish_ratio": 0.537,
         "top_matches": [
           {
             "date": "2025-05-22 00:00:00",
             "similarity": 0.8817444782003317,
             "direction": "BULLISH",
-            "strength": 0.04477529984860501,
-            "open": 2549.62,
-            "close": 2663.78,
-            "high": 2693.07,
-            "low": 2542.86,
+            "strength": 0.0446177969423756,
+            "open": 2551.0,
+            "close": 2664.82,
+            "high": 2692.99,
+            "low": 2544.83,
             "astro_sig": {
               "date": "2025-05-22 00:00:00",
               "moon_phase_val": 0.8183387177895003,
@@ -145,11 +145,11 @@
             "date": "2025-04-27 00:00:00",
             "similarity": 0.778226567935795,
             "direction": "BEARISH",
-            "strength": 0.01637804100828514,
-            "open": 1820.12,
-            "close": 1790.31,
-            "high": 1857.15,
-            "low": 1779.7,
+            "strength": 0.016244981794416916,
+            "open": 1820.87,
+            "close": 1791.29,
+            "high": 1857.47,
+            "low": 1781.9,
             "astro_sig": {
               "date": "2025-04-27 00:00:00",
               "moon_phase_val": 0.971758912714453,
@@ -240,11 +240,11 @@
             "date": "2024-05-08 00:00:00",
             "similarity": 0.7740832478900183,
             "direction": "BEARISH",
-            "strength": 0.010483540840879818,
-            "open": 3004.71,
-            "close": 2973.21,
-            "high": 3037.71,
-            "low": 2934.42,
+            "strength": 0.010473468654452062,
+            "open": 3005.69,
+            "close": 2974.21,
+            "high": 3038.15,
+            "low": 2936.48,
             "astro_sig": {
               "date": "2024-05-08 00:00:00",
               "moon_phase_val": 0.9841888728517835,
@@ -367,11 +367,11 @@
             "date": "2025-05-21 00:00:00",
             "similarity": 0.7593456363548867,
             "direction": "BULLISH",
-            "strength": 0.010386738579937481,
-            "open": 2523.41,
-            "close": 2549.62,
-            "high": 2616.17,
-            "low": 2450.72,
+            "strength": 0.010617267321398043,
+            "open": 2524.19,
+            "close": 2550.99,
+            "high": 2615.95,
+            "low": 2452.2,
             "astro_sig": {
               "date": "2025-05-21 00:00:00",
               "moon_phase_val": 0.7844755255864984,
@@ -478,11 +478,11 @@
             "date": "2024-04-08 00:00:00",
             "similarity": 0.7571596143644816,
             "direction": "BULLISH",
-            "strength": 0.06974073238328334,
-            "open": 3456.66,
-            "close": 3697.73,
-            "high": 3733.71,
-            "low": 3408.03,
+            "strength": 0.06959932835388812,
+            "open": 3454.2,
+            "close": 3694.61,
+            "high": 3730.71,
+            "low": 3406.36,
             "astro_sig": {
               "date": "2024-04-08 00:00:00",
               "moon_phase_val": 0.9682931067617268,
@@ -579,7 +579,7 @@
           }
         ]
       },
-      "matches_found": 29
+      "matches_found": 15
     },
     "SOLUSDT": {
       "analysis_date": "2026-05-12T00:00:00",
@@ -593,23 +593,23 @@
       },
       "forecast": {
         "direction": "BULLISH",
-        "confidence": 0.103,
-        "bullish_count": 16,
-        "bearish_count": 13,
+        "confidence": 0.15,
+        "bullish_count": 9,
+        "bearish_count": 6,
         "neutral_count": 0,
-        "total_matches": 29,
-        "avg_strength": 0.0299,
-        "bullish_ratio": 0.556,
+        "total_matches": 15,
+        "avg_strength": 0.0212,
+        "bullish_ratio": 0.601,
         "top_matches": [
           {
             "date": "2025-05-22 00:00:00",
             "similarity": 0.8817444782003317,
             "direction": "BULLISH",
-            "strength": 0.03527377521613836,
-            "open": 173.5,
-            "close": 179.62,
-            "high": 180.86,
-            "low": 172.51,
+            "strength": 0.03538089201336876,
+            "open": 173.54,
+            "close": 179.68,
+            "high": 180.87,
+            "low": 172.59,
             "astro_sig": {
               "date": "2025-05-22 00:00:00",
               "moon_phase_val": 0.8183387177895003,
@@ -716,11 +716,11 @@
             "date": "2025-04-27 00:00:00",
             "similarity": 0.778226567935795,
             "direction": "BEARISH",
-            "strength": 0.008581964465303394,
-            "open": 149.15,
-            "close": 147.87,
-            "high": 150.38,
-            "low": 145.4,
+            "strength": 0.008309878032435391,
+            "open": 149.22,
+            "close": 147.98,
+            "high": 150.41,
+            "low": 145.51,
             "astro_sig": {
               "date": "2025-04-27 00:00:00",
               "moon_phase_val": 0.971758912714453,
@@ -811,11 +811,11 @@
             "date": "2024-05-08 00:00:00",
             "similarity": 0.7740832478900183,
             "direction": "BEARISH",
-            "strength": 0.039929734477400156,
-            "open": 148.01,
-            "close": 142.1,
-            "high": 149.88,
-            "low": 139.91,
+            "strength": 0.0395190164155914,
+            "open": 148.03,
+            "close": 142.18,
+            "high": 152.0,
+            "low": 140.0,
             "astro_sig": {
               "date": "2024-05-08 00:00:00",
               "moon_phase_val": 0.9841888728517835,
@@ -938,11 +938,11 @@
             "date": "2025-05-21 00:00:00",
             "similarity": 0.7593456363548867,
             "direction": "BULLISH",
-            "strength": 0.029490298463181623,
-            "open": 168.53,
-            "close": 173.5,
-            "high": 175.96,
-            "low": 165.42,
+            "strength": 0.029301856575123065,
+            "open": 168.59,
+            "close": 173.53,
+            "high": 175.99,
+            "low": 165.51,
             "astro_sig": {
               "date": "2025-05-21 00:00:00",
               "moon_phase_val": 0.7844755255864984,
@@ -1049,11 +1049,11 @@
             "date": "2024-04-08 00:00:00",
             "similarity": 0.7571596143644816,
             "direction": "BULLISH",
-            "strength": 0.005897735492127093,
-            "open": 179.73,
-            "close": 180.79,
-            "high": 184.86,
-            "low": 174.6,
+            "strength": 0.006517742744136906,
+            "open": 179.51,
+            "close": 180.68,
+            "high": 184.68,
+            "low": 175.25,
             "astro_sig": {
               "date": "2024-04-08 00:00:00",
               "moon_phase_val": 0.9682931067617268,
@@ -1150,7 +1150,7 @@
           }
         ]
       },
-      "matches_found": 29
+      "matches_found": 15
     }
   }
 }
