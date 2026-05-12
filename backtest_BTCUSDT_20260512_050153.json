@@ -1,0 +1,429 @@
+{
+  "timestamp": "2026-05-12T05:01:53.945972",
+  "mode": "backtest",
+  "symbol": "BTCUSDT",
+  "results": {
+    "total_candles_tested": 50,
+    "predictions_made": 30,
+    "no_predictions": 20,
+    "correct": 12,
+    "wrong": 18,
+    "accuracy": 0.4,
+    "accuracy_percent": 40.0,
+    "confident_predictions": 1,
+    "confident_accuracy": 0.0,
+    "confident_accuracy_percent": 0.0,
+    "parameters": {
+      "candles": 50,
+      "min_similarity": 0.65,
+      "max_matches": 50,
+      "moon_phase_weight": 0.3,
+      "moon_sector_weight": 0.2,
+      "sun_sector_weight": 0.15,
+      "aspect_count_weight": 0.15,
+      "dominant_aspect_weight": 0.1
+    },
+    "detailed_results": [
+      {
+        "date": "2026-03-24 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.0,
+        "matches_found": 18
+      },
+      {
+        "date": "2026-03-25 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.118,
+        "matches_found": 34
+      },
+      {
+        "date": "2026-03-26 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BEARISH",
+        "result": "CORRECT",
+        "confidence": 0.158,
+        "matches_found": 38
+      },
+      {
+        "date": "2026-03-27 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BEARISH",
+        "result": "CORRECT",
+        "confidence": 0.167,
+        "matches_found": 36
+      },
+      {
+        "date": "2026-03-28 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.136,
+        "matches_found": 44
+      },
+      {
+        "date": "2026-03-29 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.086,
+        "matches_found": 35
+      },
+      {
+        "date": "2026-03-30 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.091,
+        "matches_found": 22
+      },
+      {
+        "date": "2026-03-31 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.2,
+        "matches_found": 12
+      },
+      {
+        "date": "2026-04-01 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.184,
+        "matches_found": 49
+      },
+      {
+        "date": "2026-04-02 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.259,
+        "matches_found": 27
+      },
+      {
+        "date": "2026-04-03 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.16,
+        "matches_found": 50
+      },
+      {
+        "date": "2026-04-04 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.08,
+        "matches_found": 50
+      },
+      {
+        "date": "2026-04-05 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.04,
+        "matches_found": 50
+      },
+      {
+        "date": "2026-04-06 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.029,
+        "matches_found": 35
+      },
+      {
+        "date": "2026-04-07 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.023,
+        "matches_found": 43
+      },
+      {
+        "date": "2026-04-08 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.102,
+        "matches_found": 49
+      },
+      {
+        "date": "2026-04-09 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.2,
+        "matches_found": 18
+      },
+      {
+        "date": "2026-04-10 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.073,
+        "matches_found": 41
+      },
+      {
+        "date": "2026-04-11 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.15,
+        "matches_found": 9
+      },
+      {
+        "date": "2026-04-12 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.2,
+        "matches_found": 25
+      },
+      {
+        "date": "2026-04-13 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.189,
+        "matches_found": 37
+      },
+      {
+        "date": "2026-04-14 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.5,
+        "matches_found": 20
+      },
+      {
+        "date": "2026-04-15 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.125,
+        "matches_found": 48
+      },
+      {
+        "date": "2026-04-16 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.086,
+        "matches_found": 35
+      },
+      {
+        "date": "2026-04-17 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.105,
+        "matches_found": 38
+      },
+      {
+        "date": "2026-04-18 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.064,
+        "matches_found": 47
+      },
+      {
+        "date": "2026-04-19 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.135,
+        "matches_found": 37
+      },
+      {
+        "date": "2026-04-20 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.0,
+        "matches_found": 28
+      },
+      {
+        "date": "2026-04-21 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.182,
+        "matches_found": 44
+      },
+      {
+        "date": "2026-04-22 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.12,
+        "matches_found": 50
+      },
+      {
+        "date": "2026-04-23 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.135,
+        "matches_found": 37
+      },
+      {
+        "date": "2026-04-24 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.077,
+        "matches_found": 39
+      },
+      {
+        "date": "2026-04-25 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.125,
+        "matches_found": 32
+      },
+      {
+        "date": "2026-04-26 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.023,
+        "matches_found": 43
+      },
+      {
+        "date": "2026-04-27 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.0,
+        "matches_found": 38
+      },
+      {
+        "date": "2026-04-28 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.077,
+        "matches_found": 39
+      },
+      {
+        "date": "2026-04-29 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.182,
+        "matches_found": 44
+      },
+      {
+        "date": "2026-04-30 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.156,
+        "matches_found": 45
+      },
+      {
+        "date": "2026-05-01 00:00:00",
+        "predicted": "BEARISH",
+        "actual": "BULLISH",
+        "result": "WRONG",
+        "confidence": 0.267,
+        "matches_found": 30
+      },
+      {
+        "date": "2026-05-02 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.04,
+        "matches_found": 50
+      },
+      {
+        "date": "2026-05-03 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.07,
+        "matches_found": 43
+      },
+      {
+        "date": "2026-05-04 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.024,
+        "matches_found": 41
+      },
+      {
+        "date": "2026-05-05 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.125,
+        "matches_found": 48
+      },
+      {
+        "date": "2026-05-06 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BULLISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.04,
+        "matches_found": 50
+      },
+      {
+        "date": "2026-05-07 00:00:00",
+        "predicted": "NEUTRAL/UNCERTAIN",
+        "actual": "BEARISH",
+        "result": "NO_PREDICTION",
+        "confidence": 0.071,
+        "matches_found": 28
+      },
+      {
+        "date": "2026-05-08 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.156,
+        "matches_found": 45
+      },
+      {
+        "date": "2026-05-09 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.319,
+        "matches_found": 47
+      },
+      {
+        "date": "2026-05-10 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BULLISH",
+        "result": "CORRECT",
+        "confidence": 0.238,
+        "matches_found": 21
+      },
+      {
+        "date": "2026-05-11 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.444,
+        "matches_found": 36
+      },
+      {
+        "date": "2026-05-12 00:00:00",
+        "predicted": "BULLISH",
+        "actual": "BEARISH",
+        "result": "WRONG",
+        "confidence": 0.241,
+        "matches_found": 29
+      }
+    ]
+  }
+}

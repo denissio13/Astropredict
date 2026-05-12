@@ -12,6 +12,9 @@
 - **Анализ ценовых движений**: Статистика бычьих/медвежьих свечей для схожих дат
 - **Прогноз направления**: BULLISH / BEARISH / NEUTRAL с уровнем уверенности
 - **Мульти-парный анализ**: Поддержка анализа нескольких пар одновременно
+- **Бэктестинг стратегии**: Проверка точности прогнозов на исторических данных
+- **Самообучение и оптимизация**: Автоматический подбор оптимальных параметров для максимальной точности
+- **Прогноз на конкретную дату**: Возможность указать любую дату для анализа
 
 ## Установка зависимостей
 
@@ -49,9 +52,14 @@ python astro_trading_analyzer.py --pairs BTCUSDT --similarity 0.8 --max-matches 
 |----------|----------|----------------------|
 | `--pairs` | Список криптовалютных пар через запятую | Обязательно |
 | `--exchange` | Биржа для загрузки данных (binance/bybit) | binance |
-| `--data` | Путь к папке для сохранения данных | market_data/ |
+| `--data` | Путь к папке для сохранения данных | data/ |
 | `--similarity` | Минимальный порог схожести паттернов (0-1) | 0.7 |
 | `--max-matches` | Максимальное количество найденных паттернов | 30 |
+| `--target-date` | Дата для прогноза (YYYY-MM-DD) | Последняя доступная дата |
+| `--backtest` | Запустить режим бэктестинга | Выключено |
+| `--optimize` | Запустить режим оптимизации параметров | Выключено |
+| `--candles` | Количество свечей для бэктестинга/оптимизации | 200 |
+| `--tolerance` | Допустимое отклонение для точности прогноза (%) | 0.5 |
 
 ### Примеры команд
 
@@ -64,14 +72,29 @@ python astro_trading_analyzer.py --pairs ETHUSDT,SOLUSDT --exchange bybit
 
 # Глубокий анализ с большим количеством совпадений
 python astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT --similarity 0.6 --max-matches 100
+
+# Прогноз на конкретную историческую дату
+python astro_trading_analyzer.py --pairs BTCUSDT --target-date 2024-06-15
+
+# Бэктестинг стратегии на последних 200 свечах
+python astro_trading_analyzer.py --pairs BTCUSDT --backtest --candles 200
+
+# Бэктестинг с настройкой точности (допустимое отклонение 1%)
+python astro_trading_analyzer.py --pairs ETHUSDT --backtest --candles 300 --tolerance 1.0
+
+# Оптимизация параметров для поиска наилучшей конфигурации
+python astro_trading_analyzer.py --pairs BTCUSDT --optimize --candles 200
+
+# Комбинированный режим: оптимизация с последующим прогнозом
+python astro_trading_analyzer.py --pairs SOLUSDT --optimize --candles 150 --similarity 0.75
 ```
 
 ## Хранение данных
 
-Скрипт автоматически скачивает и сохраняет исторические данные в папку `market_data/`:
+Скрипт автоматически скачивает и сохраняет исторические данные в папку `data/`:
 
 ```
-market_data/
+data/
 ├── binance_BTCUSDT_daily.csv
 ├── binance_ETHUSDT_daily.csv
 └── bybit_SOLUSDT_daily.csv
@@ -79,12 +102,65 @@ market_data/
 
 Формат файлов CSV:
 ```csv
-timestamp,open,high,low,close,volume
+date,open,high,low,close,volume
 2020-01-01 00:00:00,1.1234,1.1250,1.1200,1.1240,1000
 ...
 ```
 
 При повторном запуске скрипт использует кэшированные данные, если они есть.
+
+## Результаты бэктестинга и оптимизации
+
+При запуске в режиме бэктестинга или оптимизации скрипт создаёт JSON файлы с подробной статистикой:
+
+```
+backtest_BTCUSDT_20240615_143022.json  # Результаты бэктестинга
+optimize_BTCUSDT_20240615_145530.json  # Результаты оптимизации
+```
+
+### Структура отчёта бэктестинга
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "mode": "backtest",
+  "parameters": {
+    "candles_tested": 200,
+    "similarity_threshold": 0.7,
+    "tolerance_percent": 0.5
+  },
+  "statistics": {
+    "total_predictions": 180,
+    "correct_predictions": 126,
+    "accuracy_percent": 70.0,
+    "bullish_correct": 68,
+    "bearish_correct": 58,
+    "neutral_correct": 0,
+    "average_confidence": 85.3
+  }
+}
+```
+
+### Структура отчёта оптимизации
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "mode": "optimize",
+  "best_parameters": {
+    "similarity_threshold": 0.75,
+    "max_matches": 40,
+    "tolerance_percent": 0.8
+  },
+  "best_accuracy": 73.5,
+  "tested_combinations": 45,
+  "top_configurations": [
+    {"similarity": 0.75, "max_matches": 40, "accuracy": 73.5},
+    {"similarity": 0.70, "max_matches": 35, "accuracy": 71.2},
+    ...
+  ]
+}
+```
 
 ## Веса параметров схожести
 
@@ -180,6 +256,22 @@ result = analyzer.analyze_historical_patterns(
 # Генерация отчёта
 report = analyzer.generate_report(result, symbol='BTCUSDT')
 print(report)
+
+# Бэктестинг стратегии
+backtest_stats = analyzer.backtest(
+    df=price_data,
+    candles=200,
+    tolerance_percent=0.5
+)
+print(f"Точность стратегии: {backtest_stats['accuracy_percent']:.2f}%")
+
+# Оптимизация параметров
+opt_results = analyzer.optimize_parameters(
+    df=price_data,
+    candles=200
+)
+print(f"Лучшие параметры: {opt_results['best_parameters']}")
+print(f"Лучшая точность: {opt_results['best_accuracy']:.2f}%")
 ```
 
 ### Основные классы и методы
@@ -196,6 +288,9 @@ print(report)
 - `calculate_pattern_similarity(sig1, sig2)` - Коэффициент схожести сигнатур
 - `analyze_historical_patterns(price_data, current_date, ...)` - Основной анализ
 - `generate_report(analysis_result, symbol='')` - Генерация текстового отчёта
+- `backtest(df, candles=200, tolerance_percent=0.5)` - Бэктестинг стратегии на исторических данных
+- `optimize_parameters(df, candles=200)` - Поиск оптимальных параметров через перебор комбинаций
+- `get_prediction_direction(bullish_count, bearish_count)` - Определение направления прогноза
 
 ## Важное предупреждение
 
