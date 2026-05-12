@@ -18,6 +18,7 @@ import os
 import sys
 import datetime
 import math
+from itertools import product
 from pathlib import Path
 
 import pandas as pd
