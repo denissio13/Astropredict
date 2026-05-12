@@ -223,45 +223,193 @@ class AstrologicalAnalyzer:
         if prob < 0.4: return "BEARISH", 1 - prob
         return "NEUTRAL", 0.5
 
-    def backtest(self, start_idx=None, end_idx=None, window=20, min_matches=5, tolerance=0.85):
+    def backtest(self, start_idx=None, end_idx=None, window=20, min_matches=5, tolerance=0.85, detailed=False):
+        """
+        Расширенный бэктест с финансовой статистикой.
+        """
         print("\n🔄 Starting Backtest..." + (" (GPU)" if USE_GPU else " (CPU)"))
         df_len = len(self.df)
         if start_idx is None: start_idx = window
         if end_idx is None: end_idx = df_len - 1
 
-        correct, total, details = 0, 0, []
+        correct, total = 0, 0
+        wins, losses = [], []
+        all_trades = []
+        
+        # Для расчета PnL нам нужно знать размер движения цены
         for i in range(start_idx, min(end_idx, df_len - 1)):
             matches = self.find_similar_patterns(i, window=window, top_n=20, similarity_threshold=tolerance)
             if len(matches) < min_matches: continue
 
             pred_dir, conf = self.predict_direction(matches)
-            actual = self.df.iloc[i+1]['close'] > self.df.iloc[i]['close']
-            actual_dir = "BULLISH" if actual else "BEARISH"
+            
+            # Реальное движение
+            close_curr = self.df.iloc[i]['close']
+            close_next = self.df.iloc[i+1]['close']
+            actual_move = close_next - close_curr
+            actual_dir = "BULLISH" if actual_move > 0 else "BEARISH"
+            
+            # Если прогноз нейтральный - пропускаем
+            if pred_dir == "NEUTRAL":
+                continue
 
-            if pred_dir != "NEUTRAL":
-                total += 1
-                if pred_dir == actual_dir: correct += 1
-                details.append({'date': str(self.df.iloc[i]['date']), 'pred': pred_dir, 'actual': actual_dir, 'res': 'WIN' if pred_dir == actual_dir else 'LOSS'})
+            total += 1
+            
+            # Расчет результата сделки (в пунктах цены)
+            # Если купили (BULLISH) и цена выросла - прибыль
+            # Если продали (BEARISH) и цена упала - прибыль
+            pnl = 0.0
+            if pred_dir == "BULLISH":
+                pnl = actual_move
+                if actual_move > 0:
+                    correct += 1
+                    wins.append({'date': str(self.df.iloc[i]['date']), 'pnl': pnl, 'conf': conf})
+                else:
+                    losses.append({'date': str(self.df.iloc[i]['date']), 'pnl': pnl, 'conf': conf})
+            elif pred_dir == "BEARISH":
+                pnl = -actual_move  # Инвертируем, так как шортим
+                if actual_move < 0:
+                    correct += 1
+                    wins.append({'date': str(self.df.iloc[i]['date']), 'pnl': pnl, 'conf': conf})
+                else:
+                    losses.append({'date': str(self.df.iloc[i]['date']), 'pnl': pnl, 'conf': conf})
+            
+            all_trades.append({
+                'date': str(self.df.iloc[i]['date']),
+                'pred': pred_dir,
+                'actual': actual_dir,
+                'pnl': pnl,
+                'res': 'WIN' if pnl > 0 else 'LOSS'
+            })
 
+        # Статистика
         acc = (correct / total * 100) if total > 0 else 0
-        print(f"✅ Backtest: {correct}/{total} ({acc:.2f}%)")
-        return {'accuracy': acc, 'total': total, 'correct': correct, 'details': details}
+        
+        total_pnl = sum(t['pnl'] for t in all_trades)
+        gross_profit = sum(t['pnl'] for t in all_trades if t['pnl'] > 0)
+        gross_loss = abs(sum(t['pnl'] for t in all_trades if t['pnl'] < 0))
+        
+        avg_win = (gross_profit / len(wins)) if wins else 0
+        avg_loss = (gross_loss / len(losses)) if losses else 0
+        
+        profit_factor = (gross_profit / gross_loss) if gross_loss > 0 else float('inf') if gross_profit > 0 else 0
+        
+        # Max Drawdown
+        peak = 0
+        max_dd = 0
+        current_equity = 0
+        for t in all_trades:
+            current_equity += t['pnl']
+            if current_equity > peak:
+                peak = current_equity
+            dd = peak - current_equity
+            if dd > max_dd:
+                max_dd = dd
+
+        print(f"📊 Total Trades: {total}")
+        print(f"🎯 Win Rate: {acc:.2f}% ({correct}/{total})")
+        print(f"💰 Net PnL: {total_pnl:.4f} ({'+' if total_pnl > 0 else ''}{total_pnl:.2f}%)")
+        print(f"📈 Gross Profit: {gross_profit:.4f}")
+        print(f"📉 Gross Loss: {gross_loss:.4f}")
+        print(f"📊 Avg Win: {avg_win:.4f} | Avg Loss: {avg_loss:.4f}")
+        print(f"🏆 Profit Factor: {profit_factor:.2f}")
+        print(f"⚠️  Max Drawdown: {max_dd:.4f}")
+        
+        if losses:
+            sorted_losses = sorted(losses, key=lambda x: x['pnl'])[:5]
+            print("\n❌ Top 5 Worst Trades:")
+            for l in sorted_losses:
+                print(f"   {l['date']}: {l['pnl']:.4f} (Conf: {l['conf']:.2f})")
+
+        # Рекомендации
+        print("\n💡 Recommendations:")
+        if profit_factor < 1.0:
+            print("   ⚠️ Strategy is losing money. Consider tightening similarity threshold or increasing min_matches.")
+        elif profit_factor < 1.5:
+            print("   ⚡ Strategy is marginal. Try optimizing parameters further.")
+        else:
+            print("   ✅ Strategy looks profitable. Consider live testing with small size.")
+            
+        if max_dd > gross_profit * 0.5:
+            print("   ⚠️ High drawdown relative to profit. Consider reducing position size or filtering low confidence signals.")
+            
+        if len(wins) > 0 and len(losses) > 0:
+            win_rate_by_conf = {}
+            # Группировка по уверенности (примерно)
+            for w in wins:
+                bucket = int(w['conf'] * 10) * 0.1
+                if bucket not in win_rate_by_conf: win_rate_by_conf[bucket] = {'w':0, 'l':0}
+                win_rate_by_conf[bucket]['w'] += 1
+            for l in losses:
+                bucket = int(l['conf'] * 10) * 0.1
+                if bucket not in win_rate_by_conf: win_rate_by_conf[bucket] = {'w':0, 'l':0}
+                win_rate_by_conf[bucket]['l'] += 1
+            
+            best_conf = 0
+            best_ratio = 0
+            for k, v in win_rate_by_conf.items():
+                if v['w'] + v['l'] > 2: # Минимум 3 сделки
+                    ratio = v['w'] / (v['w'] + v['l'])
+                    if ratio > best_ratio:
+                        best_ratio = ratio
+                        best_conf = k
+            if best_conf > 0:
+                print(f"   🎯 Best results with confidence > {best_conf:.1f} (Win rate: {best_ratio*100:.1f}%)")
+
+        result = {
+            'accuracy': acc, 
+            'total': total, 
+            'correct': correct, 
+            'net_pnl': total_pnl,
+            'gross_profit': gross_profit,
+            'gross_loss': gross_loss,
+            'avg_win': avg_win,
+            'avg_loss': avg_loss,
+            'profit_factor': profit_factor,
+            'max_drawdown': max_dd,
+            'trades': all_trades
+        }
+        
+        if detailed:
+            return result
+        else:
+            # Для оптимизации возвращаем только ключевые метрики
+            return {'accuracy': acc, 'total': total, 'correct': correct, 'score': total_pnl}
 
     def optimize_parameters(self, candle_range=200):
         print("\n🔍 Optimizing Parameters..." + (" (GPU)" if USE_GPU else " (CPU)"))
         windows, thresholds, mins = [10, 20, 30], [0.80, 0.85, 0.90], [3, 5, 7]
-        best_score, best_params, log = -1, {}, []
+        best_score, best_params, log = -float('inf'), {}, []
 
         for w, t, m in product(windows, thresholds, mins):
             res = self.backtest(start_idx=w, end_idx=min(len(self.df)-1, w+candle_range), window=w, min_matches=m, tolerance=t)
-            score = res['accuracy'] * math.sqrt(res['total']) if res['total'] > 0 else 0
-            log.append({'w': w, 't': t, 'm': m, 'acc': res['accuracy'], 'score': score})
+            # Оптимизируем по чистой прибыли (PnL), а не просто по точности
+            score = res.get('score', 0) 
+            log.append({'w': w, 't': t, 'm': m, 'pnl': score, 'acc': res['accuracy'], 'total': res['total']})
             if score > best_score:
-                best_score, best_params = score, {'window': w, 'threshold': t, 'min_matches': m, 'accuracy': res['accuracy']}
+                best_score, best_params = score, {
+                    'window': w, 
+                    'threshold': t, 
+                    'min_matches': m, 
+                    'pnl': score,
+                    'accuracy': res['accuracy'],
+                    'total_trades': res['total']
+                }
 
-        print(f"🏆 Best: Win={best_params.get('window')} Thr={best_params.get('threshold')} Min={best_params.get('min_matches')} Acc={best_params.get('accuracy', 0):.2f}%")
+        print(f"\n🏆 BEST CONFIGURATION FOUND:")
+        print(f"   Window: {best_params.get('window')}")
+        print(f"   Threshold: {best_params.get('threshold')}")
+        print(f"   Min Matches: {best_params.get('min_matches')}")
+        print(f"   ➤ Net PnL: {best_params.get('pnl', 0):.4f}")
+        print(f"   ➤ Accuracy: {best_params.get('accuracy', 0):.2f}%")
+        print(f"   ➤ Total Trades: {best_params.get('total_trades', 0)}")
+        
+        # Сохраняем полный лог
+        log_data = {'best': best_params, 'all_runs': sorted(log, key=lambda x: x['pnl'], reverse=True)[:10]}
         with open(RESULTS_DIR / "optimization_log.json", 'w') as f:
-            json.dump({'best': best_params, 'log': log}, f, indent=2)
+            json.dump(log_data, f, indent=2)
+            
+        print(f"\n💾 Detailed optimization log saved to: {RESULTS_DIR / 'optimization_log.json'}")
         return best_params
 
 

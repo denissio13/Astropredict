@@ -1,28 +1,41 @@
-```
-# Logs and temporary files
+# Examples
+Input:
+### Added files:
+[pycache/main.cpython-310.pyc, dist/app.js, .env.local, .vscode/settings.json]
+
+### Deleted files:
+[]
+
+### Modified files:
+[]
+### current .gitignore Content
 *.log
-*.tmp
-
-# Environment files
-.env
-.env.local
-*.env.*
-
-# Build artifacts
-dist/
-build/
+Expected Output:
+# Compiled and build artifacts
 *.pyc
 __pycache__/
-
+*.o
+*.obj
+dist/
+build/
 # Dependencies
 .venv/
 venv/
 node_modules/
-
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+# Environment
+.env
+.env.local
+.env.*
 # Editors
 .vscode/
 .idea/
+# Original rules preserved
+*.log
 
-# Results and logs
-results/
-```
+# Final reminder: Output ONLY the .gitignore content. If nothing should be ignored, output NOTHING.
+
+(empty)

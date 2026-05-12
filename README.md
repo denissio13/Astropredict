@@ -124,58 +124,63 @@ date,open,high,low,close,volume
 
 При повторном запуске скрипт использует кэшированные данные, если они есть.
 
-## Результаты бэктестинга и оптимизации
+## 📊 Результаты анализа
 
-При запуске в режиме бэктестинга или оптимизации скрипт создаёт JSON файлы с подробной статистикой:
+### Режим бэктестинга (`--backtest`)
 
+Скрипт проводит детальное тестирование стратегии на исторических данных и выводит:
+
+*   **Total Trades**: Общее количество сделок
+*   **Win Rate**: Процент успешных сделок
+*   **Net PnL**: Чистая прибыль/убыток в пунктах цены
+*   **Gross Profit / Loss**: Валовая прибыль и убыток
+*   **Avg Win / Loss**: Средний выигрыш и проигрыш
+*   **Profit Factor**: Отношение прибыли к убытку ( > 1.0 означает прибыльность)
+*   **Max Drawdown**: Максимальная просадка депозита
+*   **Top 5 Worst Trades**: Разбор самых убыточных сделок с датами
+*   **Recommendations**: Автоматические рекомендации по улучшению стратегии
+*   **Confidence Analysis**: Анализ эффективности в зависимости от уверенности прогноза
+
+**Пример вывода:**
+```text
+📊 Total Trades: 45
+🎯 Win Rate: 53.33% (24/45)
+💰 Net PnL: +1250.45 (+2.78%)
+📈 Gross Profit: 3400.20
+📉 Gross Loss: 2149.75
+📊 Avg Win: 141.68 | Avg Loss: 89.57
+🏆 Profit Factor: 1.58
+⚠️  Max Drawdown: 450.30
+
+❌ Top 5 Worst Trades:
+   2023-11-15: -320.50 (Conf: 0.88)
+   2023-10-22: -285.10 (Conf: 0.92)
+   ...
+
+💡 Recommendations:
+   ✅ Strategy looks profitable. Consider live testing with small size.
+   🎯 Best results with confidence > 0.9 (Win rate: 65.5%)
 ```
-backtest_BTCUSDT_20240615_143022.json  # Результаты бэктестинга
-optimize_BTCUSDT_20240615_145530.json  # Результаты оптимизации
+
+### Режим оптимизации (`--optimize`)
+
+Автоматический перебор параметров для поиска наилучшей конфигурации стратегии. Оптимизация ведется по критерию **максимальной чистой прибыли (Net PnL)**, а не просто точности прогнозов.
+
+**Вывод лучшей конфигурации:**
+```text
+🏆 BEST CONFIGURATION FOUND:
+   Window: 20
+   Threshold: 0.85
+   Min Matches: 5
+   ➤ Net PnL: +1540.20
+   ➤ Accuracy: 55.40%
+   ➤ Total Trades: 52
 ```
 
-### Структура отчёта бэктестинга
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "mode": "backtest",
-  "parameters": {
-    "candles_tested": 200,
-    "similarity_threshold": 0.7,
-    "tolerance_percent": 0.5
-  },
-  "statistics": {
-    "total_predictions": 180,
-    "correct_predictions": 126,
-    "accuracy_percent": 70.0,
-    "bullish_correct": 68,
-    "bearish_correct": 58,
-    "neutral_correct": 0,
-    "average_confidence": 85.3
-  }
-}
-```
-
-### Структура отчёта оптимизации
-
-```json
-{
-  "symbol": "BTCUSDT",
-  "mode": "optimize",
-  "best_parameters": {
-    "similarity_threshold": 0.75,
-    "max_matches": 40,
-    "tolerance_percent": 0.8
-  },
-  "best_accuracy": 73.5,
-  "tested_combinations": 45,
-  "top_configurations": [
-    {"similarity": 0.75, "max_matches": 40, "accuracy": 73.5},
-    {"similarity": 0.70, "max_matches": 35, "accuracy": 71.2},
-    ...
-  ]
-}
-```
+Результаты сохраняются в файл `results/optimization_log.json`, содержащий:
+*   Лучшую конфигурацию параметров
+*   Топ-10 лучших комбинаций параметров по прибыли
+*   Полную статистику всех протестированных комбинаций
 
 ## GPU Ускорение (NVIDIA RTX 3090)
 
