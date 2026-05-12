@@ -149,7 +149,13 @@ class AstrologicalAnalyzer:
         n = len(dates)
         sun_lons, moon_lons, phases = np.zeros(n), np.zeros(n), np.zeros(n)
         for i, d in enumerate(dates):
-            s, m = self.astro_calc.get_sun_moon_positions(d.strftime("%Y-%m-%d"))
+            # Конвертация даты в строку независимо от типа (numpy.datetime64 и др.)
+            if hasattr(d, 'strftime'):
+                date_str = d.strftime("%Y-%m-%d")
+            else:
+                date_str = str(d)[:10]
+            
+            s, m = self.astro_calc.get_sun_moon_positions(date_str)
             sun_lons[i], moon_lons[i] = s, m
             phases[i] = self.astro_calc.get_moon_phase(s, m)
         return (xp.asarray(sun_lons), xp.asarray(moon_lons), xp.asarray(phases)) if USE_GPU else (sun_lons, moon_lons, phases)
@@ -158,7 +164,14 @@ class AstrologicalAnalyzer:
         if target_idx >= len(self.df):
             return []
         target_date = self.df.iloc[target_idx]['date']
-        ts, tm = self.astro_calc.get_sun_moon_positions(target_date.strftime("%Y-%m-%d"))
+        
+        # Конвертация даты в строку
+        if hasattr(target_date, 'strftime'):
+            target_date_str = target_date.strftime("%Y-%m-%d")
+        else:
+            target_date_str = str(target_date)[:10]
+            
+        ts, tm = self.astro_calc.get_sun_moon_positions(target_date_str)
         tp = self.astro_calc.get_moon_phase(ts, tm)
 
         hist_dates = self.df.iloc[:target_idx]['date'].values
