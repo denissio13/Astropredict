@@ -8,7 +8,8 @@ GPU: NVIDIA CUDA (via CuPy) for fast pattern matching
 Usage:
     python astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT
     python astro_trading_analyzer.py --pairs BTCUSDT --backtest --candles 200
-    python astro_trading_analyzer.py --pairs BTCUSDT --optimize
+    python astro_trading_analyzer.py --pairs BTCUSDT --optimize --mode basic
+    python astro_trading_analyzer.py --pairs BTCUSDT --optimize --mode full
     python astro_trading_analyzer.py --pairs BTCUSDT --target-date 2024-06-15
 """
 
@@ -18,6 +19,7 @@ import os
 import sys
 import datetime
 import math
+import time
 from itertools import product
 from pathlib import Path
 
@@ -48,6 +50,13 @@ else:
 
 # Optional: Swiss Ephemeris
 try:
+    import swisseph as swe
+    HAS_SWISSEPHE = True
+    print("✅ swisseph loaded. Using high precision calculations.")
+    swe.set_ephe_path(None)
+except ImportError:
+    HAS_SWISSEPHE = False
+    print("⚠️  swisseph not installed. Using simplified approximations.")
     import swisseph as swe
     HAS_SWISSEPH = True
 except ImportError:
@@ -376,40 +385,149 @@ class AstrologicalAnalyzer:
             # Для оптимизации возвращаем только ключевые метрики
             return {'accuracy': acc, 'total': total, 'correct': correct, 'score': total_pnl}
 
-    def optimize_parameters(self, candle_range=200):
-        print("\n🔍 Optimizing Parameters..." + (" (GPU)" if USE_GPU else " (CPU)"))
-        windows, thresholds, mins = [10, 20, 30], [0.80, 0.85, 0.90], [3, 5, 7]
+    def optimize_parameters(self, candle_range=200, mode='basic'):
+        """
+        Оптимизация параметров.
+        mode='basic': перебор window, threshold, min_matches с фиксированными весами.
+        mode='full': дополнительный перебор весов астрологических факторов.
+        """
+        print(f"\n🔍 Optimizing Parameters... (Mode: {mode})" + (" (GPU)" if USE_GPU else " (CPU)"))
+        
+        windows = [10, 20, 30, 50]
+        thresholds = [0.80, 0.85, 0.90, 0.95]
+        mins = [3, 5, 7, 10]
+        
+        # Наборы весов для полного режима
+        weight_sets = [None]  # Default weights
+        if mode == 'full':
+            print("⚠️  Full mode: Testing different weight configurations (this will take a while)...")
+            weight_sets = [
+                None,  # Default: phase=3, sign=2, illum=2, aspect=2, venus=1, mars=1
+                {'moon_phase': 5.0, 'moon_sign': 1.0, 'illumination': 1.0, 'sun_moon_aspect': 1.0, 'venus_sign': 1.0, 'mars_sign': 1.0},
+                {'moon_phase': 1.0, 'moon_sign': 3.0, 'illumination': 3.0, 'sun_moon_aspect': 1.0, 'venus_sign': 1.0, 'mars_sign': 1.0},
+                {'moon_phase': 2.0, 'moon_sign': 2.0, 'illumination': 2.0, 'sun_moon_aspect': 3.0, 'venus_sign': 1.0, 'mars_sign': 1.0},
+                {'moon_phase': 1.0, 'moon_sign': 1.0, 'illumination': 1.0, 'sun_moon_aspect': 1.0, 'venus_sign': 3.0, 'mars_sign': 3.0}
+            ]
+        
         best_score, best_params, log = -float('inf'), {}, []
+        total_combos = len(windows) * len(thresholds) * len(mins) * len(weight_sets)
+        current_combo = 0
+        
+        if mode == 'basic':
+            print(f"📊 Testing {total_combos} combinations (Basic Mode)...")
+        else:
+            print(f"📊 Testing {total_combos} combinations (Full Mode with weight variations)...")
 
         for w, t, m in product(windows, thresholds, mins):
-            res = self.backtest(start_idx=w, end_idx=min(len(self.df)-1, w+candle_range), window=w, min_matches=m, tolerance=t)
-            # Оптимизируем по чистой прибыли (PnL), а не просто по точности
-            score = res.get('score', 0) 
-            log.append({'w': w, 't': t, 'm': m, 'pnl': score, 'acc': res['accuracy'], 'total': res['total']})
-            if score > best_score:
-                best_score, best_params = score, {
-                    'window': w, 
-                    'threshold': t, 
-                    'min_matches': m, 
-                    'pnl': score,
-                    'accuracy': res['accuracy'],
-                    'total_trades': res['total']
-                }
+            for ws in weight_sets:
+                current_combo += 1
+                print(f"\rProgress: {current_combo}/{total_combos}", end="", flush=True)
+                
+                # Временно меняем веса если нужно
+                original_weights = None
+                if ws:
+                    original_weights = self.weights.copy()
+                    self.weights = ws
+                
+                try:
+                    res = self.backtest(
+                        start_idx=w, 
+                        end_idx=min(len(self.df)-1, w+candle_range), 
+                        window=w, 
+                        min_matches=m, 
+                        tolerance=t,
+                        detailed=True  # Получаем полную статистику
+                    )
+                except Exception as e:
+                    if original_weights:
+                        self.weights = original_weights
+                    continue
+                
+                # Восстанавливаем веса
+                if original_weights:
+                    self.weights = original_weights
+                
+                # Скоринг: PnL - штраф за просадку + бонус за PF
+                pnl = res.get('net_pnl', 0)
+                dd = res.get('max_drawdown', 0)
+                pf = res.get('profit_factor', 0)
+                trades = res.get('total', 0)
+                
+                if trades < 5:  # Пропускаем если мало сделок
+                    continue
+                    
+                score = pnl - (dd * 0.5) + (pf * 10)
+                
+                log.append({
+                    'w': w, 't': t, 'm': m, 
+                    'weights': 'custom' if ws else 'default',
+                    'pnl': pnl, 'dd': dd, 'pf': pf,
+                    'acc': res['accuracy'], 'total': trades,
+                    'score': score
+                })
+                
+                if score > best_score:
+                    best_score = score
+                    best_params = {
+                        'window': w, 
+                        'threshold': t, 
+                        'min_matches': m,
+                        'weights': ws,
+                        'pnl': pnl,
+                        'drawdown': dd,
+                        'profit_factor': pf,
+                        'accuracy': res['accuracy'],
+                        'total_trades': trades
+                    }
 
-        print(f"\n🏆 BEST CONFIGURATION FOUND:")
-        print(f"   Window: {best_params.get('window')}")
-        print(f"   Threshold: {best_params.get('threshold')}")
-        print(f"   Min Matches: {best_params.get('min_matches')}")
-        print(f"   ➤ Net PnL: {best_params.get('pnl', 0):.4f}")
-        print(f"   ➤ Accuracy: {best_params.get('accuracy', 0):.2f}%")
-        print(f"   ➤ Total Trades: {best_params.get('total_trades', 0)}")
+        print("\n\n" + "="*50)
+        print("🏆 OPTIMIZATION COMPLETE")
+        print("="*50)
         
-        # Сохраняем полный лог
-        log_data = {'best': best_params, 'all_runs': sorted(log, key=lambda x: x['pnl'], reverse=True)[:10]}
-        with open(RESULTS_DIR / "optimization_log.json", 'w') as f:
+        if not best_params:
+            print("❌ No profitable configuration found.")
+            return
+            
+        wp = best_params.get('weights')
+        w_str = "Default" if wp is None else "Custom"
+        
+        print(f"Best Configuration:")
+        print(f"   Window: {best_params['window']}")
+        print(f"   Threshold: {best_params['threshold']}")
+        print(f"   Min Matches: {best_params['min_matches']}")
+        print(f"   Weights: {w_str}")
+        print(f"\n📈 Results:")
+        print(f"   Net PnL: {best_params['pnl']:.4f}")
+        print(f"   Max Drawdown: {best_params['drawdown']:.4f}")
+        print(f"   Profit Factor: {best_params['profit_factor']:.2f}")
+        print(f"   Win Rate: {best_params['accuracy']:.2f}%")
+        print(f"   Total Trades: {best_params['total_trades']}")
+        
+        # Рекомендации
+        print("\n💡 Recommendations:")
+        if best_params['profit_factor'] < 1.2:
+            print("   ⚠️ Profit Factor is low. Try increasing 'tolerance' to filter weak patterns.")
+        if best_params['drawdown'] > abs(best_params['pnl']) * 0.5 and best_params['pnl'] > 0:
+            print("   ⚠️ High drawdown relative to profit. Reduce 'window' size or increase 'min_matches'.")
+        if best_params['accuracy'] < 45:
+            print("   ⚠️ Low win rate. The strategy might be counter-trend. Check aspect weights.")
+        if best_params['total_trades'] < 20:
+            print("   ⚠️ Too few trades. Decrease 'min_matches' or 'tolerance' to find more patterns.")
+        if best_params['profit_factor'] > 1.5:
+            print("   ✅ Strategy looks profitable! Consider live testing with small position size.")
+            
+        # Сохранение полного лога
+        log_data = {
+            'best_params': best_params,
+            'top_10_runs': sorted(log, key=lambda x: x['score'], reverse=True)[:10],
+            'timestamp': datetime.datetime.now().isoformat()
+        }
+        
+        out_file = RESULTS_DIR / f"optimization_{datetime.date.today()}.json"
+        with open(out_file, 'w') as f:
             json.dump(log_data, f, indent=2)
             
-        print(f"\n💾 Detailed optimization log saved to: {RESULTS_DIR / 'optimization_log.json'}")
+        print(f"\n💾 Detailed results saved to: {out_file}")
         return best_params
 
 
@@ -420,6 +538,8 @@ def main():
     parser.add_argument('--target-date', '-d', type=str, help="Target date YYYY-MM-DD")
     parser.add_argument('--backtest', action='store_true', help="Run backtest")
     parser.add_argument('--optimize', action='store_true', help="Optimize params")
+    parser.add_argument('--mode', type=str, default='basic', choices=['basic', 'full'], 
+                        help="Optimization mode: basic (fast) or full (slow, tests weights)")
     parser.add_argument('--candles', type=int, default=200, help="Candles for backtest/optimize")
     parser.add_argument('--tolerance', type=float, default=0.85, help="Similarity threshold")
     args = parser.parse_args()
@@ -435,7 +555,7 @@ def main():
         analyzer = AstrologicalAnalyzer(df, astro)
 
         if args.optimize:
-            analyzer.optimize_parameters(args.candles)
+            analyzer.optimize_parameters(args.candles, mode=args.mode)
         elif args.backtest:
             res = analyzer.backtest(end_idx=min(len(df)-1, len(df)-args.candles), tolerance=args.tolerance)
             out = RESULTS_DIR / f"backtest_{pair}_{datetime.date.today()}.json"
