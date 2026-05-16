@@ -302,7 +302,7 @@ pip install -U pyswisseph
 python3 astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT --optimize --mode basic --candles 250 --workers 12
 ```
 
-2. Каждый день после закрытия дневки (например, 05:02 Екатеринбург):
+2. Каждый день после закрытия дневки (например, 03:05 Москва):
 
 ```bash
 python3 astro_trading_analyzer.py --pairs BTCUSDT,ETHUSDT --use-optimized --strategy auto
